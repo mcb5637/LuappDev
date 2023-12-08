@@ -16,6 +16,163 @@ static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<lua_
 
 namespace LuappDev
 {
+	class IntHolderOp {
+		int i;
+
+		static int get(lua::State L) {
+			auto t = L.GetUserData<IntHolderOp>(1);
+			L.Push(t->i);
+			return 1;
+		}
+		static int set(lua::State L) {
+			auto t = L.GetUserData<IntHolderOp>(1);
+			t->i = L.CheckInt(2);
+			return 0;
+		}
+
+	public:
+
+		IntHolderOp(int i) : i(i) {}
+
+		auto operator<=>(const IntHolderOp&) const noexcept = default;
+
+		IntHolderOp operator+(const IntHolderOp& o) const noexcept {
+			return IntHolderOp{ this->i + o.i };
+		}
+		IntHolderOp operator-(const IntHolderOp& o) const noexcept {
+			return IntHolderOp{ this->i - o.i };
+		}
+		IntHolderOp operator*(const IntHolderOp& o) const noexcept {
+			return IntHolderOp{ this->i * o.i };
+		}
+		IntHolderOp operator/(const IntHolderOp& o) const noexcept {
+			return IntHolderOp{ this->i / o.i };
+		}
+		IntHolderOp operator-() const noexcept {
+			return IntHolderOp{ -this->i };
+		}
+
+		static constexpr std::array<lua::FuncReference, 2> LuaMethods{ {
+				lua::FuncReference::GetRef<get>("Get"),
+				lua::FuncReference::GetRef<set>("Set"),
+		} };
+	};
+
+	class IntHolderLua {
+		int i;
+
+		static int get(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			L.Push(t->i);
+			return 1;
+		}
+		static int set(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			t->i = L.CheckInt(2);
+			return 0;
+		}
+
+	public:
+
+		IntHolderLua(int i) : i(i) {}
+
+		static constexpr std::array<lua::FuncReference, 2> LuaMethods{ {
+				lua::FuncReference::GetRef<get>("Get"),
+				lua::FuncReference::GetRef<set>("Set"),
+		} };
+
+		static int Equals(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.Push(t->i == o->i);
+			return 1;
+		}
+		static int LessThan(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.Push(t->i < o->i);
+			return 1;
+		}
+		static int LessOrEquals(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.Push(t->i <= o->i);
+			return 1;
+		}
+		static int Add(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i + o->i);
+			return 1;
+		}
+		static int Substract(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i - o->i);
+			return 1;
+		}
+		static int Multiply(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i * o->i);
+			return 1;
+		}
+		static int Divide(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i / o->i);
+			return 1;
+		}
+		static int Pow(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(static_cast<int>(std::pow(t->i, o->i)));
+			return 1;
+		}
+		static int UnaryMinus(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			L.NewUserData<IntHolderLua>(-t->i);
+			return 1;
+		}
+		static int Concat(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.Push(t->i);
+			L.Push(o->i);
+			L.Concat(2);
+			return 1;
+		}
+		static int NewIndex(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			if (L.CheckStringView(2) != "i")
+				throw lua::LuaException{ "invalid key" };
+			t->i = L.CheckInt(3);
+			return 0;
+		}
+		static int Index(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			if (L.CheckStringView(2) != "i")
+				throw lua::LuaException{ "invalid key" };
+			L.Push(t->i);
+			return 1;
+		}
+		static int Call(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.CheckInt(2);
+			L.NewUserData<IntHolderLua>(t->i * o);
+			return 1;
+		}
+	};
+	class DtorTest {
+		std::function<void()> f;
+	public:
+		DtorTest(std::function<void()> f) : f(f) {}
+
+		~DtorTest() {
+			f();
+		}
+	};
+
 	TEST_CLASS(LuappDev)
 	{
 	public:
@@ -294,6 +451,77 @@ namespace LuappDev
 			L.RegisterFuncs(toRegister);
 			L.DoStringT("return foo(6, 666)");
 			Assert::AreEqual(6 + 42, L.CheckInt(1));
+		}
+
+		TEST_METHOD(Userdata) {
+			lua::StateCloser cl{};
+			lua::State L = cl.GetState();
+			Assert::AreEqual(0, L.GetTop());
+
+			L.NewUserData<IntHolderOp>(5);
+			L.SetGlobal("i");
+			L.NewUserData<IntHolderOp>(7);
+			L.SetGlobal("j");
+
+			try {
+				L.DoStringT("assert(i:Get()==5);\n"
+					"j:Set(10);\n"
+					"assert(j:Get()==10);\n"
+					"assert((-i):Get()==-5);\n"
+					"assert((i+j):Get()==15);\n"
+					"assert((i-j):Get()==-5);\n"
+					"assert((i*j):Get()==50);\n"
+					"assert((j/i):Get()==2);\n"
+					"assert(i<=j);\n"
+					"assert(i<j);\n"
+					"assert(i~=j);\n"
+					"assert(j>i);\n"
+					"assert(j>=i);\n"
+					"assert(i==i);\n");
+			}
+			catch (const lua::LuaException& e) {
+				auto m = ToString(e.what());
+				Assert::Fail(m.c_str());
+			}
+
+			L.NewUserData<IntHolderLua>(5);
+			L.SetGlobal("i");
+			L.NewUserData<IntHolderLua>(7);
+			L.SetGlobal("j");
+
+			try {
+				L.DoStringT("assert(i:Get()==5);\n"
+					"j:Set(10);\n"
+					"assert(j:Get()==10);\n"
+					"assert((-i):Get()==-5);\n"
+					"assert((i+j):Get()==15);\n"
+					"assert((i-j):Get()==-5);\n"
+					"assert((i*j):Get()==50);\n"
+					"assert((j/i):Get()==2);\n"
+					"assert(i<=j);\n"
+					"assert(i<j);\n"
+					"assert(i~=j);\n"
+					"assert(j>i);\n"
+					"assert(j>=i);\n"
+					"assert(i==i);\n");
+				L.DoStringT("assert((i^j):Get()==5^10);\n"
+					"assert(i.i==5);\n"
+					"k=i+j; k.i=3; assert(k:Get()==3);\n"
+					"assert((i..j)=='510');\n"
+					"assert(i(6).i==5*6);\n");
+			}
+			catch (const lua::LuaException& e) {
+				auto m = ToString(e.what());
+				Assert::Fail(m.c_str());
+			}
+
+			bool closed = false;
+			{
+				lua::StateCloser cl2{};
+				cl2.GetState().NewUserData<DtorTest>([&closed]() { closed = true; });
+				// closing the state forces everything to get gcd
+			}
+			Assert::IsTrue(closed);
 		}
 	};
 }
