@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="lua50">
+      <UniqueIdentifier>{50c048d4-ee08-4934-acd7-3c3e87afded4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="luapp">
+      <UniqueIdentifier>{215c12ca-0040-440a-b407-c271b0921c4e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LuappDev.cpp">
@@ -21,10 +27,28 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="luapp\luapp50.cpp">
+      <Filter>luapp</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\constexprTypename.h">
+      <Filter>luapp</Filter>
+    </ClInclude>
+    <ClInclude Include="lua50\lauxlib.h">
+      <Filter>lua50</Filter>
+    </ClInclude>
+    <ClInclude Include="lua50\lua.h">
+      <Filter>lua50</Filter>
+    </ClInclude>
+    <ClInclude Include="lua50\lualib.h">
+      <Filter>lua50</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\luapp50.h">
+      <Filter>luapp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
