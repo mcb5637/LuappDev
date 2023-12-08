@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "CppUnitTest.h"
 
+#include <format>
 #include "luapp/luapp50.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -305,6 +306,10 @@ namespace LuappDev
 			L.Arithmetic(lua::ArihmeticOperator::Add);
 			return 1;
 		}
+		static int ex(lua::State L) {
+			auto i = L.CheckInt(1);
+			throw lua::LuaException{ std::format("number is {}", i) };
+		}
 		static constexpr std::array<lua::FuncReference, 1> toRegister{ {
 				lua::FuncReference::GetRef<foo>("foo"),
 			} };
@@ -342,6 +347,24 @@ namespace LuappDev
 			Assert::AreEqual(42 + 5, L.CheckInt(1));
 			Assert::IsTrue(L.IsNil(2));
 			L.SetTop(0);
+
+			L.Push<ex>();
+			L.Push(5);
+			Assert::IsTrue(L.PCall(1, 0) == lua::ErrorCode::Runtime);
+			Assert::IsTrue(L.CheckStringView(1).find("number is 5") != std::string_view::npos);
+			L.SetTop(0);
+			bool ok = false;
+			try {
+				L.Push<ex>();
+				L.Push(5);
+				L.TCall(1, 0);
+				L.SetTop(0);
+			}
+			catch (const lua::LuaException& e) {
+				if (std::string_view{ e.what() }.find("number is 5") != std::string_view::npos)
+					ok = true;
+			}
+			Assert::IsTrue(ok);
 		}
 
 		TEST_METHOD(Tables) {
@@ -451,6 +474,20 @@ namespace LuappDev
 			L.RegisterFuncs(toRegister);
 			L.DoStringT("return foo(6, 666)");
 			Assert::AreEqual(6 + 42, L.CheckInt(1));
+			L.SetTop(0);
+
+			Assert::IsTrue(L.DoString("error('number is 6')") == lua::ErrorCode::Runtime);
+			//Assert::IsTrue(L.CheckStringView(1).find("number is 6") != std::string_view::npos);
+			L.SetTop(0);
+			bool ok = false;
+			try {
+				L.DoStringT("error('number is 6')");
+			}
+			catch (const lua::LuaException& e) {
+				if (std::string_view{ e.what() }.find("number is 6") != std::string_view::npos)
+					ok = true;
+			}
+			Assert::IsTrue(ok);
 		}
 
 		TEST_METHOD(Userdata) {
