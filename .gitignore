@@ -362,3 +362,17 @@ MigrationBackup/
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
 /LuappDev/lua50
+/LuappDev/lua51
+/LuappDev/lua52
+/LuappDev/lua53
+/LuappDev/lua54
+/Debug50
+/Debug51
+/Debug52
+/Debug53
+/Debug54
+/LuappDev/Debug50
+/LuappDev/Debug51
+/LuappDev/Debug52
+/LuappDev/Debug53
+/LuappDev/Debug54

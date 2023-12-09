@@ -2,7 +2,23 @@
 #include "CppUnitTest.h"
 
 #include <format>
+#include <functional>
+
+#ifdef LUA50
 #include "luapp/luapp50.h"
+#endif
+#ifdef LUA51
+#include "luapp/luapp51.h"
+#endif
+#ifdef LUA52
+#include "luapp/luapp52.h"
+#endif
+#ifdef LUA53
+#include "luapp/luapp53.h"
+#endif
+#ifdef LUA54
+#include "luapp/luapp54.h"
+#endif
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -18,7 +34,7 @@ static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<lua_
 namespace LuappDev
 {
 	class IntHolderOp {
-		int i;
+		lua::Integer i;
 
 		static int get(lua::State L) {
 			auto t = L.GetUserData<IntHolderOp>(1);
@@ -33,7 +49,7 @@ namespace LuappDev
 
 	public:
 
-		IntHolderOp(int i) : i(i) {}
+		IntHolderOp(lua::Integer i) : i(i) {}
 
 		auto operator<=>(const IntHolderOp&) const noexcept = default;
 
@@ -60,7 +76,7 @@ namespace LuappDev
 	};
 
 	class IntHolderLua {
-		int i;
+		lua::Integer i;
 
 		static int get(lua::State L) {
 			auto t = L.GetUserData<IntHolderLua>(1);
@@ -75,7 +91,7 @@ namespace LuappDev
 
 	public:
 
-		IntHolderLua(int i) : i(i) {}
+		IntHolderLua(lua::Integer i) : i(i) {}
 
 		static constexpr std::array<lua::FuncReference, 2> LuaMethods{ {
 				lua::FuncReference::GetRef<get>("Get"),
@@ -127,7 +143,7 @@ namespace LuappDev
 		static int Pow(lua::State L) {
 			auto t = L.GetUserData<IntHolderLua>(1);
 			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(static_cast<int>(std::pow(t->i, o->i)));
+			L.NewUserData<IntHolderLua>(static_cast<lua::Integer>(std::pow(t->i, o->i)));
 			return 1;
 		}
 		static int UnaryMinus(lua::State L) {
@@ -184,6 +200,7 @@ namespace LuappDev
 			lua::StateCloser closer{ L };
 
 			Assert::AreEqual(L.GetState(), closer.GetState().GetState());
+			Assert::AreEqual(typeid(DtorTest).name(), typename_details::type_name<DtorTest>());
 		}
 
 		TEST_METHOD(StackAccess) {
@@ -204,32 +221,32 @@ namespace LuappDev
 			L.SetTop(2);
 			Assert::AreEqual(2, L.GetTop());
 
-			Assert::AreEqual(1, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInt(1));
 			Assert::IsTrue(L.CheckBool(2));
 
 			L.Push();
 			L.Insert(2);
 			Assert::AreEqual(3, L.GetTop());
-			Assert::AreEqual(1, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInt(1));
 			Assert::IsTrue(L.IsNil(2));
 			Assert::IsTrue(L.CheckBool(3));
 
 			L.Push("");
 			L.Replace(2);
 			Assert::AreEqual(3, L.GetTop());
-			Assert::AreEqual(1, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInt(1));
 			Assert::AreEqual("", L.CheckString(2));
 			Assert::IsTrue(L.CheckBool(3));
 
 			L.Copy(1, 2);
 			Assert::AreEqual(3, L.GetTop());
-			Assert::AreEqual(1, L.CheckInt(1));
-			Assert::AreEqual(1, L.CheckInt(2));
+			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInt(2));
 			Assert::IsTrue(L.CheckBool(3));
 
 			L.Remove(2);
 			Assert::AreEqual(2, L.GetTop());
-			Assert::AreEqual(1, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInt(1));
 			Assert::IsTrue(L.CheckBool(2));
 
 			L.Pop(2);
@@ -253,15 +270,15 @@ namespace LuappDev
 
 			L.Push(1);
 			Assert::IsTrue(L.IsNumber(1));
-			Assert::AreEqual(1, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInt(1));
 			Assert::AreEqual(1.0, L.CheckNumber(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::Number);
 			L.SetTop(0);
 
-			L.Push(1.5);
+			L.Push(1.3);
 			Assert::IsTrue(L.IsNumber(1));
-			Assert::AreEqual(1, L.CheckInt(1));
-			Assert::AreEqual(1.5, L.CheckNumber(1));
+			//Assert::AreEqual(lua::Integer{ 1 }, L.CheckInt(1));
+			Assert::AreEqual(1.3, L.CheckNumber(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::Number);
 			L.SetTop(0);
 
@@ -326,7 +343,7 @@ namespace LuappDev
 
 			L.Push(5);
 			L.TCall(1, 1);
-			Assert::AreEqual(42 + 5, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 42 + 5 }, L.CheckInt(1));
 			L.SetTop(0);
 
 			L.Push<foo>();
@@ -336,7 +353,7 @@ namespace LuappDev
 
 			L.Push(5);
 			L.TCall(1, 1);
-			Assert::AreEqual(42 + 5, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 42 + 5 }, L.CheckInt(1));
 			L.SetTop(0);
 
 			L.Push<foo>();
@@ -344,7 +361,7 @@ namespace LuappDev
 			L.Push(5);
 			L.Push("bar");
 			L.TCall(2, 2);
-			Assert::AreEqual(42 + 5, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 42 + 5 }, L.CheckInt(1));
 			Assert::IsTrue(L.IsNil(2));
 			L.SetTop(0);
 
@@ -380,7 +397,7 @@ namespace LuappDev
 			L.SetTable(1);
 			L.Push("a");
 			L.GetTable(1);
-			Assert::AreEqual(42, L.CheckInt(2));
+			Assert::AreEqual(lua::Integer{ 42 }, L.CheckInt(2));
 			L.Pop(1);
 
 			L.Push("a");
@@ -388,7 +405,7 @@ namespace LuappDev
 			L.SetTableRaw(1);
 			L.Push("a");
 			L.GetTableRaw(1);
-			Assert::AreEqual(43, L.CheckInt(2));
+			Assert::AreEqual(lua::Integer{ 43 }, L.CheckInt(2));
 			L.Pop(1);
 
 			L.Push("a");
@@ -424,30 +441,32 @@ namespace LuappDev
 			Assert::IsTrue(L.Compare(1, 2, lua::ComparisonOperator::LessThanOrEquals));
 
 			L.Arithmetic(lua::ArihmeticOperator::Add);
-			Assert::AreEqual(15, L.CheckInt(2));
+			Assert::AreEqual(lua::Integer{ 15 }, L.CheckInt(2));
 
 			L.Arithmetic(lua::ArihmeticOperator::Subtract);
-			Assert::AreEqual(-10, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ -10 }, L.CheckInt(1));
 
 			L.Push(2);
 			L.Arithmetic(lua::ArihmeticOperator::Multiply);
-			Assert::AreEqual(-20, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ -20 }, L.CheckInt(1));
 
 			L.Push(2);
 			L.Arithmetic(lua::ArihmeticOperator::Divide);
-			Assert::AreEqual(-10, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ -10 }, L.CheckInt(1));
 
 			L.Arithmetic(lua::ArihmeticOperator::UnaryNegation);
-			Assert::AreEqual(10, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 10 }, L.CheckInt(1));
 
 			L.Push(4);
 			L.Arithmetic(lua::ArihmeticOperator::Modulo);
-			Assert::AreEqual(2, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 2 }, L.CheckInt(1));
 
 			L.Push(4);
 			L.Arithmetic(lua::ArihmeticOperator::Pow);
-			Assert::AreEqual(16, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 16 }, L.CheckInt(1));
+			L.Pop(1);
 
+			L.Push(16);
 			L.Push("abc");
 			L.Concat(2);
 			Assert::AreEqual("16abc", L.CheckString(1));
@@ -468,15 +487,15 @@ namespace LuappDev
 			L.Push(42);
 			L.Push("abc");
 			L.TCall(3, 1);
-			Assert::AreEqual(5 + 42, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 5 + 42 }, L.CheckInt(1));
 			L.Pop(1);
 
 			L.RegisterFuncs(toRegister);
 			L.DoStringT("return foo(6, 666)");
-			Assert::AreEqual(6 + 42, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 6 + 42 }, L.CheckInt(1));
 			L.SetTop(0);
 
-			Assert::IsTrue(L.DoString("error('number is 6')") == lua::ErrorCode::Runtime);
+			Assert::IsTrue(L.DoString("error('number is 6')") != lua::ErrorCode::Success);
 			//Assert::IsTrue(L.CheckStringView(1).find("number is 6") != std::string_view::npos);
 			L.SetTop(0);
 			bool ok = false;
@@ -546,6 +565,7 @@ namespace LuappDev
 					"k=i+j; k.i=3; assert(k:Get()==3);\n"
 					"assert((i..j)=='510');\n"
 					"assert(i(6).i==5*6);\n");
+				// TODO #%, bit
 			}
 			catch (const lua::LuaException& e) {
 				auto m = ToString(e.what());

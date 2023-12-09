@@ -7,14 +7,23 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LuappDev", "LuappDev\LuappD
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x86 = Debug|x86
-		Release|x86 = Release|x86
+		Debug50|x86 = Debug50|x86
+		Debug51|x86 = Debug51|x86
+		Debug52|x86 = Debug52|x86
+		Debug53|x86 = Debug53|x86
+		Debug54|x86 = Debug54|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug|x86.ActiveCfg = Debug|Win32
-		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug|x86.Build.0 = Debug|Win32
-		{5BC52392-6389-4745-85D6-79A08F10B440}.Release|x86.ActiveCfg = Release|Win32
-		{5BC52392-6389-4745-85D6-79A08F10B440}.Release|x86.Build.0 = Release|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug50|x86.ActiveCfg = Debug50|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug50|x86.Build.0 = Debug50|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug51|x86.ActiveCfg = Debug51|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug51|x86.Build.0 = Debug51|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug52|x86.ActiveCfg = Debug52|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug52|x86.Build.0 = Debug52|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug53|x86.ActiveCfg = Debug53|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug53|x86.Build.0 = Debug53|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug54|x86.ActiveCfg = Debug54|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug54|x86.Build.0 = Debug54|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
