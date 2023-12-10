@@ -743,5 +743,48 @@ namespace LuappDev
 			Assert::AreEqual(lua::Integer{ 42 }, L.CheckInt(1));
 			Assert::AreEqual(lua::Integer{ 4242 }, L.CheckInt(2));
 		}
+
+		static void hook_magic(lua::State L, lua::ActivationRecord ar) {
+			if (L.Debug_GetEventFromAR(ar) == lua::HookEvent::Return) {
+				auto inf = L.Debug_GetInfoFromAR(ar, lua::DebugInfoOptions::Name);
+				if (inf.Name && inf.Name == std::string_view{ "bar" }) {
+					L.Debug_GetStack(1, inf, lua::DebugInfoOptions::Name, true);
+					Assert::AreEqual("foo", inf.Name);
+					int l = 1;
+					while (const char* n = L.Debug_GetLocal(1, l)) {
+						if (n == std::string_view{ "l" }) {
+							Assert::AreEqual(lua::Integer{ 1 }, L.CheckInt(-1));
+							L.Push(42);
+							Assert::AreEqual("l", L.Debug_SetLocal(1, l));
+						}
+						L.Pop(1);
+						++l;
+					}
+					int u = 1;
+					while (const char* n = L.Debug_GetUpvalue(-1, u)) {
+						if (n == std::string_view{ "upv" }) {
+							Assert::AreEqual(lua::Integer{ 0 }, L.CheckInt(-1));
+							L.Push(4242);
+							Assert::AreEqual("upv", L.Debug_SetUpvalue(-3, u));
+						}
+						L.Pop(1);
+						++u;
+					}
+					L.Pop(1);
+				}
+			}
+		}
+		TEST_METHOD(Hook) {
+			lua::StateCloser cl{};
+			lua::State L = cl.GetState();
+			Assert::AreEqual(0, L.GetTop());
+
+			L.Debug_SetHook<hook_magic>(lua::HookEvent::Call | lua::HookEvent::Return, 0);
+
+			L.DoStringT("local upv = 0; function bar() end; function foo() local l = 1; bar(); return l,upv; end; local a,b = foo(); return a,b;");
+			Assert::AreEqual(2, L.GetTop());
+			Assert::AreEqual(lua::Integer{ 42 }, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 4242 }, L.CheckInt(2));
+		}
 	};
 }
