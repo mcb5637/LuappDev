@@ -42,7 +42,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="luapp\luapp54.cpp">
+    <ClCompile Include="luapp\luapp50.cpp">
       <Filter>luapp</Filter>
     </ClCompile>
   </ItemGroup>

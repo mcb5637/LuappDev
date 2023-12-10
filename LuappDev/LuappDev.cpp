@@ -15,9 +15,11 @@
 #endif
 #ifdef LUA53
 #include "luapp/luapp53.h"
+#define hasbit
 #endif
 #ifdef LUA54
 #include "luapp/luapp54.h"
+#define hasbit
 #endif
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -67,6 +69,25 @@ namespace LuappDev
 		}
 		IntHolderOp operator-() const noexcept {
 			return IntHolderOp{ -this->i };
+		}
+
+		IntHolderOp operator&(const IntHolderOp& o) const noexcept {
+			return IntHolderOp{ this->i & o.i };
+		}
+		IntHolderOp operator|(const IntHolderOp& o) const noexcept {
+			return IntHolderOp{ this->i | o.i };
+		}
+		IntHolderOp operator^(const IntHolderOp& o) const noexcept {
+			return IntHolderOp{ this->i ^ o.i };
+		}
+		IntHolderOp operator~() const noexcept {
+			return IntHolderOp{ ~this->i };
+		}
+		IntHolderOp operator<<(const IntHolderOp& o) const noexcept {
+			return IntHolderOp{ this->i << o.i };
+		}
+		IntHolderOp operator>>(const IntHolderOp& o) const noexcept {
+			return IntHolderOp{ this->i >> o.i };
 		}
 
 		static constexpr std::array<lua::FuncReference, 2> LuaMethods{ {
@@ -177,6 +198,61 @@ namespace LuappDev
 			auto t = L.GetUserData<IntHolderLua>(1);
 			auto o = L.CheckInt(2);
 			L.NewUserData<IntHolderLua>(t->i * o);
+			return 1;
+		}
+		static int Modulo(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i % o->i);
+			return 1;
+		}
+		static int Length(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			L.Push(t->i);
+			L.ToString(-1);
+			auto l = L.RawLength(-1);
+			L.Push(static_cast<lua::Integer>(l));
+			return 1;
+		}
+		static int IntegerDivide(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i / o->i + 1);
+			return 1;
+		}
+		static int BitwiseAnd(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i & o->i);
+			return 1;
+		}
+		static int BitwiseOr(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i | o->i);
+			return 1;
+		}
+		static int BitwiseXOr(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i ^ o->i);
+			return 1;
+		}
+		static int BitwiseNot(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			L.NewUserData<IntHolderLua>(~t->i);
+			return 1;
+		}
+		static int ShiftLeft(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i << o->i);
+			return 1;
+		}
+		static int ShiftRight(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			auto o = L.GetUserData<IntHolderLua>(2);
+			L.NewUserData<IntHolderLua>(t->i >> o->i);
 			return 1;
 		}
 	};
@@ -534,6 +610,15 @@ namespace LuappDev
 					"assert(j>i);\n"
 					"assert(j>=i);\n"
 					"assert(i==i);\n");
+#ifdef hasbit
+				L.DoStringT("j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
+					"assert((i&k):Get()==2);\n"
+					"assert((i|j):Get()==6);\n"
+					"assert((i~k):Get()==4);\n"
+					"assert((~i):Get()==~2);\n"
+					"assert((j<<i):Get()==16);\n"
+					"assert((j>>i):Get()==1);\n");
+#endif
 			}
 			catch (const lua::LuaException& e) {
 				auto m = ToString(e.what());
@@ -562,10 +647,24 @@ namespace LuappDev
 					"assert(i==i);\n");
 				L.DoStringT("assert((i^j):Get()==5^10);\n"
 					"assert(i.i==5);\n"
-					"k=i+j; k.i=3; assert(k:Get()==3);\n"
+					"local k=i+j; k.i=3; assert(k:Get()==3);\n"
 					"assert((i..j)=='510');\n"
 					"assert(i(6).i==5*6);\n");
-				// TODO #%, bit
+#ifndef LUA50
+				L.DoStringT("local a = i+j; a.i=4;\n"
+					"assert((j%a).i==2);\n"
+					"assert(#j==2)\n");
+#endif
+#ifdef hasbit
+				L.DoStringT("assert((j//i):Get()==3);\n"
+					"j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
+					"assert((i&k):Get()==2);\n"
+					"assert((i|j):Get()==6);\n"
+					"assert((i~k):Get()==4);\n"
+					"assert((~i):Get()==~2);\n"
+					"assert((j<<i):Get()==16);\n"
+					"assert((j>>i):Get()==1);\n");
+#endif
 			}
 			catch (const lua::LuaException& e) {
 				auto m = ToString(e.what());
@@ -607,9 +706,7 @@ namespace LuappDev
 		static int black_magic(lua::State L) {
 			lua::DebugInfo i{};
 			Assert::IsTrue(L.Debug_GetStack(1, i, lua::DebugInfoOptions::Name, true));
-#ifdef LUA50
 			Assert::AreEqual("foo", i.Name);
-#endif
 			int l = 1;
 			while (const char* n = L.Debug_GetLocal(1, l)) {
 				if (n == std::string_view{ "l" }) {
@@ -641,7 +738,7 @@ namespace LuappDev
 			L.Push<black_magic>();
 			L.SetGlobal();
 
-			L.DoStringT("local upv = 0; function foo() local l = 1; black_magic(); return l,upv; end; return foo()");
+			L.DoStringT("local upv = 0; function foo() local l = 1; black_magic(); return l,upv; end; local a,b = foo(); return a,b;");
 			Assert::AreEqual(2, L.GetTop());
 			Assert::AreEqual(lua::Integer{ 42 }, L.CheckInt(1));
 			Assert::AreEqual(lua::Integer{ 4242 }, L.CheckInt(2));
