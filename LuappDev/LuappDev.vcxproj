@@ -267,6 +267,9 @@
     <ClInclude Include="luapp\luapp52.h" />
     <ClInclude Include="luapp\luapp53.h" />
     <ClInclude Include="luapp\luapp54.h" />
+    <ClInclude Include="luapp\luapp_common.h" />
+    <ClInclude Include="luapp\luapp_decorator.h" />
+    <ClInclude Include="luapp\luapp_userdata.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

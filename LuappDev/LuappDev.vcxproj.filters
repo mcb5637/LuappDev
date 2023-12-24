@@ -42,7 +42,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="luapp\luapp50.cpp">
+    <ClCompile Include="luapp\luapp54.cpp">
       <Filter>luapp</Filter>
     </ClCompile>
   </ItemGroup>
@@ -135,6 +135,15 @@
       <Filter>luapp</Filter>
     </ClInclude>
     <ClInclude Include="luapp\luapp54.h">
+      <Filter>luapp</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\luapp_common.h">
+      <Filter>luapp</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\luapp_userdata.h">
+      <Filter>luapp</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\luapp_decorator.h">
       <Filter>luapp</Filter>
     </ClInclude>
   </ItemGroup>
