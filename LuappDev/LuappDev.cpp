@@ -35,7 +35,6 @@ static std::wstring Microsoft::VisualStudio::CppUnitTestFramework::ToString<lua_
 
 namespace LuappDev
 {
-	/*
 	class IntHolderOp {
 		lua::Integer i;
 
@@ -265,7 +264,7 @@ namespace LuappDev
 		~DtorTest() {
 			f();
 		}
-	};*/
+	};
 
 	TEST_CLASS(LuappDev)
 	{
@@ -606,99 +605,99 @@ namespace LuappDev
 			Assert::IsTrue(ok);
 		}
 
-//		TEST_METHOD(Userdata) {
-//			lua::UniqueState L{};
-//			Assert::AreEqual(0, L.GetTop());
-//
-//			L.NewUserData<IntHolderOp>(5);
-//			L.SetGlobal("i");
-//			L.NewUserData<IntHolderOp>(7);
-//			L.SetGlobal("j");
-//
-//			try {
-//				L.DoStringT("assert(i:Get()==5);\n"
-//					"j:Set(10);\n"
-//					"assert(j:Get()==10);\n"
-//					"assert((-i):Get()==-5);\n"
-//					"assert((i+j):Get()==15);\n"
-//					"assert((i-j):Get()==-5);\n"
-//					"assert((i*j):Get()==50);\n"
-//					"assert((j/i):Get()==2);\n"
-//					"assert(i<=j);\n"
-//					"assert(i<j);\n"
-//					"assert(i~=j);\n"
-//					"assert(j>i);\n"
-//					"assert(j>=i);\n"
-//					"assert(i==i);\n");
-//#ifdef hasbit
-//				L.DoStringT("j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
-//					"assert((i&k):Get()==2);\n"
-//					"assert((i|j):Get()==6);\n"
-//					"assert((i~k):Get()==4);\n"
-//					"assert((~i):Get()==~2);\n"
-//					"assert((j<<i):Get()==16);\n"
-//					"assert((j>>i):Get()==1);\n");
-//#endif
-//			}
-//			catch (const lua::LuaException& e) {
-//				auto m = ToString(e.what());
-//				Assert::Fail(m.c_str());
-//			}
-//
-//			L.NewUserData<IntHolderLua>(5);
-//			L.SetGlobal("i");
-//			L.NewUserData<IntHolderLua>(7);
-//			L.SetGlobal("j");
-//
-//			try {
-//				L.DoStringT("assert(i:Get()==5);\n"
-//					"j:Set(10);\n"
-//					"assert(j:Get()==10);\n"
-//					"assert((-i):Get()==-5);\n"
-//					"assert((i+j):Get()==15);\n"
-//					"assert((i-j):Get()==-5);\n"
-//					"assert((i*j):Get()==50);\n"
-//					"assert((j/i):Get()==2);\n"
-//					"assert(i<=j);\n"
-//					"assert(i<j);\n"
-//					"assert(i~=j);\n"
-//					"assert(j>i);\n"
-//					"assert(j>=i);\n"
-//					"assert(i==i);\n");
-//				L.DoStringT("assert((i^j):Get()==5^10);\n"
-//					"assert(i.i==5);\n"
-//					"local k=i+j; k.i=3; assert(k:Get()==3);\n"
-//					"assert((i..j)=='510');\n"
-//					"assert(i(6).i==5*6);\n");
-//#ifndef LUA50
-//				L.DoStringT("local a = i+j; a.i=4;\n"
-//					"assert((j%a).i==2);\n"
-//					"assert(#j==2)\n");
-//#endif
-//#ifdef hasbit
-//				L.DoStringT("assert((j//i):Get()==3);\n"
-//					"j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
-//					"assert((i&k):Get()==2);\n"
-//					"assert((i|j):Get()==6);\n"
-//					"assert((i~k):Get()==4);\n"
-//					"assert((~i):Get()==~2);\n"
-//					"assert((j<<i):Get()==16);\n"
-//					"assert((j>>i):Get()==1);\n");
-//#endif
-//			}
-//			catch (const lua::LuaException& e) {
-//				auto m = ToString(e.what());
-//				Assert::Fail(m.c_str());
-//			}
-//
-//			bool closed = false;
-//			{
-//				lua::StateCloser cl2{};
-//				cl2.GetState().NewUserData<DtorTest>([&closed]() { closed = true; });
-//				// closing the state forces everything to get gcd
-//			}
-//			Assert::IsTrue(closed);
-//		}
+		TEST_METHOD(Userdata) {
+			lua::UniqueState L{};
+			Assert::AreEqual(0, L.GetTop());
+
+			L.NewUserData<IntHolderOp>(5);
+			L.SetGlobal("i");
+			L.NewUserData<IntHolderOp>(7);
+			L.SetGlobal("j");
+
+			try {
+				L.DoStringT("assert(i:Get()==5);\n"
+					"j:Set(10);\n"
+					"assert(j:Get()==10);\n"
+					"assert((-i):Get()==-5);\n"
+					"assert((i+j):Get()==15);\n"
+					"assert((i-j):Get()==-5);\n"
+					"assert((i*j):Get()==50);\n"
+					"assert((j/i):Get()==2);\n"
+					"assert(i<=j);\n"
+					"assert(i<j);\n"
+					"assert(i~=j);\n"
+					"assert(j>i);\n"
+					"assert(j>=i);\n"
+					"assert(i==i);\n");
+#ifdef hasbit
+				L.DoStringT("j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
+					"assert((i&k):Get()==2);\n"
+					"assert((i|j):Get()==6);\n"
+					"assert((i~k):Get()==4);\n"
+					"assert((~i):Get()==~2);\n"
+					"assert((j<<i):Get()==16);\n"
+					"assert((j>>i):Get()==1);\n");
+#endif
+			}
+			catch (const lua::LuaException& e) {
+				auto m = ToString(e.what());
+				Assert::Fail(m.c_str());
+			}
+
+			L.NewUserData<IntHolderLua>(5);
+			L.SetGlobal("i");
+			L.NewUserData<IntHolderLua>(7);
+			L.SetGlobal("j");
+
+			try {
+				L.DoStringT("assert(i:Get()==5);\n"
+					"j:Set(10);\n"
+					"assert(j:Get()==10);\n"
+					"assert((-i):Get()==-5);\n"
+					"assert((i+j):Get()==15);\n"
+					"assert((i-j):Get()==-5);\n"
+					"assert((i*j):Get()==50);\n"
+					"assert((j/i):Get()==2);\n"
+					"assert(i<=j);\n"
+					"assert(i<j);\n"
+					"assert(i~=j);\n"
+					"assert(j>i);\n"
+					"assert(j>=i);\n"
+					"assert(i==i);\n");
+				L.DoStringT("assert((i^j):Get()==5^10);\n"
+					"assert(i.i==5);\n"
+					"local k=i+j; k.i=3; assert(k:Get()==3);\n"
+					"assert((i..j)=='510');\n"
+					"assert(i(6).i==5*6);\n");
+#ifndef LUA50
+				L.DoStringT("local a = i+j; a.i=4;\n"
+					"assert((j%a).i==2);\n"
+					"assert(#j==2)\n");
+#endif
+#ifdef hasbit
+				L.DoStringT("assert((j//i):Get()==3);\n"
+					"j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
+					"assert((i&k):Get()==2);\n"
+					"assert((i|j):Get()==6);\n"
+					"assert((i~k):Get()==4);\n"
+					"assert((~i):Get()==~2);\n"
+					"assert((j<<i):Get()==16);\n"
+					"assert((j>>i):Get()==1);\n");
+#endif
+			}
+			catch (const lua::LuaException& e) {
+				auto m = ToString(e.what());
+				Assert::Fail(m.c_str());
+			}
+
+			bool closed = false;
+			{
+				lua::UniqueState L2{};
+				L2.NewUserData<DtorTest>([&closed]() { closed = true; });
+				// closing the state forces everything to get gcd
+			}
+			Assert::IsTrue(closed);
+		}
 
 		TEST_METHOD(Iterate) {
 			lua::UniqueState L{};
