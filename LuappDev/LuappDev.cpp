@@ -636,6 +636,22 @@ namespace LuappDev
 					ok = true;
 			}
 			Assert::IsTrue(ok);
+
+			L.SetTop(0);
+			L.GetGlobal("fool");
+			Assert::IsTrue(L.IsFunction(1));
+			Assert::IsFalse(L.IsCFunction(1));
+			auto f = L.Dump();
+			Assert::IsFalse(f.empty());
+			L.SetTop(0);
+
+			Assert::IsTrue(L.LoadBuffer(f.c_str(), f.length(), nullptr) == lua::ErrorCode::Success);
+			L.Push(7);
+			L.Push(42);
+			L.Push("abc");
+			L.TCall(3, 1);
+			Assert::AreEqual(lua::Integer{ 7 + 42 }, L.CheckInteger(1));
+			L.Pop(1);
 		}
 
 		TEST_METHOD(Userdata) {
