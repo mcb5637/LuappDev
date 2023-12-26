@@ -269,15 +269,33 @@ namespace LuappDev
 	TEST_CLASS(LuappDev)
 	{
 	public:
-		/*TEST_METHOD(CreateDelete)
+		TEST_METHOD(CreateDelete)
 		{
 			lua::State L{};
 
-			lua::StateCloser closer{ L };
+			lua::UniqueState closer{ L };
 
-			Assert::AreEqual(L.GetState(), closer.GetState().GetState());
+			Assert::AreEqual(L.GetState(), closer.GetState());
 			Assert::AreEqual(typeid(DtorTest).name(), typename_details::type_name<DtorTest>());
-		}*/
+
+			bool closed = false;
+			{
+				closer.NewUserData<DtorTest>([&closed]() { closed = true; });
+
+				Assert::IsFalse(closed);
+
+				lua::UniqueState c2{ std::move(closer) };
+				Assert::AreEqual(L.GetState(), c2.GetState());
+#pragma warning( push )
+#pragma warning( disable : 26800 )
+				Assert::AreEqual(closer.GetState(), static_cast<lua_State*>(nullptr));
+#pragma warning( pop )
+
+				Assert::IsFalse(closed);
+			}
+
+			Assert::IsTrue(closed);
+		}
 
 		TEST_METHOD(StackAccess) {
 			lua::UniqueState L{};
@@ -431,7 +449,7 @@ namespace LuappDev
 			Assert::IsTrue(L.Type(1) == lua::LType::Function);
 
 			L.Push(5);
-			L.TCall(1, 1);
+			Assert::AreEqual(1, L.TCall(1, 1));
 			Assert::AreEqual(1, L.GetTop());
 			Assert::AreEqual(lua::Integer{ 42 + 5 }, L.CheckInteger(1));
 			L.SetTop(0);
@@ -442,7 +460,7 @@ namespace LuappDev
 			Assert::IsTrue(L.Type(1) == lua::LType::Function);
 
 			L.Push(5);
-			L.TCall(1, 1);
+			Assert::AreEqual(1, L.TCall(1, 1));
 			Assert::AreEqual(1, L.GetTop());
 			Assert::AreEqual(lua::Integer{ 42 + 5 }, L.CheckInteger(1));
 			L.SetTop(0);
@@ -450,7 +468,7 @@ namespace LuappDev
 			L.Push(44);
 			L.Push<foo_up>(1);
 			L.Push(5);
-			L.TCall(1, 1);
+			Assert::AreEqual(1, L.TCall(1, L.MULTIRET));
 			Assert::AreEqual(1, L.GetTop());
 			Assert::AreEqual(lua::Integer{ 44 + 5 }, L.CheckInteger(1));
 			L.SetTop(0);
@@ -459,7 +477,7 @@ namespace LuappDev
 
 			L.Push(5);
 			L.Push("bar");
-			L.TCall(2, 2);
+			Assert::AreEqual(2, L.TCall(2, 2));
 			Assert::AreEqual(lua::Integer{ 42 + 5 }, L.CheckInteger(1));
 			Assert::IsTrue(L.IsNil(2));
 			L.SetTop(0);
@@ -489,28 +507,42 @@ namespace LuappDev
 
 			L.NewTable();
 			Assert::IsTrue(L.IsTable(1));
+			Assert::AreEqual(1, L.GetTop());
 
 			L.Push("a");
 			L.Push(42);
 			L.SetTable(1);
+			Assert::AreEqual(1, L.GetTop());
 			L.Push("a");
 			L.GetTable(1);
 			Assert::AreEqual(lua::Integer{ 42 }, L.CheckInteger(2));
 			L.Pop(1);
+			Assert::AreEqual(1, L.GetTop());
 
 			L.Push("a");
 			L.Push(43);
 			L.SetTableRaw(1);
+			Assert::AreEqual(1, L.GetTop());
 			L.Push("a");
 			L.GetTableRaw(1);
 			Assert::AreEqual(lua::Integer{ 43 }, L.CheckInteger(2));
 			L.Pop(1);
+			Assert::AreEqual(1, L.GetTop());
+
+			L.Push(44);
+			L.SetTableRaw(1, "a");
+			Assert::AreEqual(1, L.GetTop());
+			L.GetTableRaw(1, "a");
+			Assert::AreEqual(lua::Integer{ 44 }, L.CheckInteger(2));
+			L.Pop(1);
+			Assert::AreEqual(1, L.GetTop());
 
 			L.Push("a");
 			L.SetTableRaw(1, 1);
 			L.GetTableRaw(1, 1);
 			Assert::AreEqual("a", L.CheckString(2));
 			L.Pop(1);
+			Assert::AreEqual(1, L.GetTop());
 
 			Assert::IsFalse(L.GetMetatable(1));
 			L.NewTable();
@@ -592,7 +624,8 @@ namespace LuappDev
 			L.SetTop(0);
 
 			Assert::IsTrue(L.DoString("error('number is 6')") != lua::ErrorCode::Success);
-			//Assert::IsTrue(L.CheckStringView(1).find("number is 6") != std::string_view::npos);
+			Assert::IsTrue(L.CheckStringView(1).find("number is 6") != std::string_view::npos);
+
 			L.SetTop(0);
 			bool ok = false;
 			try {
@@ -725,6 +758,7 @@ namespace LuappDev
 			lua::DebugInfo i{};
 			Assert::IsTrue(L.Debug_GetStack(1, i, lua::DebugInfoOptions::Name, true));
 			Assert::AreEqual("foo", i.Name);
+			Assert::AreEqual(std::string_view{ "foo" }, std::string_view{ L.Debug_GetNameForStackFunc(1) });
 			int l = 1;
 			while (const char* n = L.Debug_GetLocal(1, l)) {
 				if (n == std::string_view{ "l" }) {
@@ -791,7 +825,8 @@ namespace LuappDev
 				}
 			}
 		}
-		/*TEST_METHOD(Hook) {
+
+		TEST_METHOD(Hook) {
 			lua::UniqueState L{};
 			Assert::AreEqual(0, L.GetTop());
 
@@ -801,6 +836,6 @@ namespace LuappDev
 			Assert::AreEqual(2, L.GetTop());
 			Assert::AreEqual(lua::Integer{ 42 }, L.CheckInteger(1));
 			Assert::AreEqual(lua::Integer{ 4242 }, L.CheckInteger(2));
-		}*/
+		}
 	};
 }
