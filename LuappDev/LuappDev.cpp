@@ -366,7 +366,7 @@ namespace LuappDev
 			L.Push(1);
 			Assert::IsTrue(L.IsNumber(1));
 #ifdef hasbit
-			Assert::IsTrue(L.IsInteger(1));
+				Assert::IsTrue(L.IsInteger(1));
 #endif
 			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInteger(1));
 			Assert::AreEqual(1.0, L.CheckNumber(1));
@@ -376,9 +376,9 @@ namespace LuappDev
 			L.Push(1.3);
 			Assert::IsTrue(L.IsNumber(1));
 #ifdef hasbit
-			Assert::IsFalse(L.IsInteger(1));
+				Assert::IsFalse(L.IsInteger(1));
 #else
-			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInt(1));
+			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInteger(1));
 #endif
 			Assert::AreEqual(1.3, L.CheckNumber(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::Number);
@@ -551,7 +551,20 @@ namespace LuappDev
 			Assert::IsTrue(L.GetMetatable(1));
 			Assert::AreEqual(L.ToPointer(2), L.ToPointer(3));
 			Assert::IsTrue(L.RawEqual(2, 3));
-			L.Pop(2);
+			L.SetTop(0);
+
+			L.DoString("local t = {5,6,7}; setmetatable(t, {__len=function() return 5; end}); return t;");
+			Assert::AreEqual(3u, L.RawLength(1));
+#ifndef LUA50
+			L.ObjLength(1);
+			Assert::AreEqual(
+#ifdef LUA51
+				3,
+#else
+				5,
+#endif
+				L.CheckInt(2));
+#endif
 		}
 
 		TEST_METHOD(Operators) {
@@ -594,6 +607,33 @@ namespace LuappDev
 			L.Arithmetic(lua::ArihmeticOperator::Pow);
 			Assert::AreEqual(lua::Integer{ 16 }, L.CheckInteger(1));
 			L.Pop(1);
+
+#ifdef hasbit
+			L.Push(4);
+			L.Push(6);
+			L.Arithmetic(lua::ArihmeticOperator::BitwiseAnd);
+			Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
+
+			L.Push(2);
+			L.Arithmetic(lua::ArihmeticOperator::BitwiseOr);
+			Assert::AreEqual(lua::Integer{ 6 }, L.CheckInteger(1));
+
+			L.Push(2);
+			L.Arithmetic(lua::ArihmeticOperator::BitwiseXOr);
+			Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
+
+			L.Push(2);
+			L.Arithmetic(lua::ArihmeticOperator::ShiftLeft);
+			Assert::AreEqual(lua::Integer{ 4 << 2 }, L.CheckInteger(1));
+
+			L.Push(2);
+			L.Arithmetic(lua::ArihmeticOperator::ShiftRight);
+			Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
+
+			L.Arithmetic(lua::ArihmeticOperator::BitwiseNot);
+			Assert::AreEqual(~lua::Integer{ 4 }, L.CheckInteger(1));
+			L.Pop(1);
+#endif
 
 			L.Push(16);
 			L.Push("abc");
@@ -678,15 +718,15 @@ namespace LuappDev
 					"assert(j>i);\n"
 					"assert(j>=i);\n"
 					"assert(i==i);\n");
-#ifdef hasbit
-				L.DoStringT("j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
-					"assert((i&k):Get()==2);\n"
-					"assert((i|j):Get()==6);\n"
-					"assert((i~k):Get()==4);\n"
-					"assert((~i):Get()==~2);\n"
-					"assert((j<<i):Get()==16);\n"
-					"assert((j>>i):Get()==1);\n");
-#endif
+				if constexpr (lua::State::Capabilities::NativeIntegers) {
+					L.DoStringT("j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
+						"assert((i&k):Get()==2);\n"
+						"assert((i|j):Get()==6);\n"
+						"assert((i~k):Get()==4);\n"
+						"assert((~i):Get()==~2);\n"
+						"assert((j<<i):Get()==16);\n"
+						"assert((j>>i):Get()==1);\n");
+				}
 			}
 			catch (const lua::LuaException& e) {
 				auto m = ToString(e.what());
@@ -718,21 +758,21 @@ namespace LuappDev
 					"local k=i+j; k.i=3; assert(k:Get()==3);\n"
 					"assert((i..j)=='510');\n"
 					"assert(i(6).i==5*6);\n");
-#ifndef LUA50
-				L.DoStringT("local a = i+j; a.i=4;\n"
-					"assert((j%a).i==2);\n"
-					"assert(#j==2)\n");
-#endif
-#ifdef hasbit
-				L.DoStringT("assert((j//i):Get()==3);\n"
-					"j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
-					"assert((i&k):Get()==2);\n"
-					"assert((i|j):Get()==6);\n"
-					"assert((i~k):Get()==4);\n"
-					"assert((~i):Get()==~2);\n"
-					"assert((j<<i):Get()==16);\n"
-					"assert((j>>i):Get()==1);\n");
-#endif
+				if constexpr (lua::State::Capabilities::MetatableLengthModulo) {
+					L.DoStringT("local a = i+j; a.i=4;\n"
+						"assert((j%a).i==2);\n"
+						"assert(#j==2)\n");
+				}
+				if constexpr (lua::State::Capabilities::NativeIntegers) {
+					L.DoStringT("assert((j//i):Get()==3);\n"
+						"j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
+						"assert((i&k):Get()==2);\n"
+						"assert((i|j):Get()==6);\n"
+						"assert((i~k):Get()==4);\n"
+						"assert((~i):Get()==~2);\n"
+						"assert((j<<i):Get()==16);\n"
+						"assert((j>>i):Get()==1);\n");
+				}
 			}
 			catch (const lua::LuaException& e) {
 				auto m = ToString(e.what());
