@@ -499,6 +499,22 @@ namespace LuappDev
 					ok = true;
 			}
 			Assert::IsTrue(ok);
+
+			L.SetTop(0);
+			struct A {
+				int i;
+
+				int P(lua::State L) {
+					L.Push(i + L.CheckInt(1) + L.CheckInt(L.Upvalueindex(2)));
+					return 1;
+				}
+			};
+			A a{ 5 };
+			L.Push(3);
+			L.Push<A, &A::P>(a, 1);
+			L.Push(4);
+			L.TCall(1, 1);
+			Assert::AreEqual(12, L.CheckInt(1));
 		}
 
 		TEST_METHOD(Tables) {
