@@ -426,6 +426,7 @@ namespace LuappDev
 			return 1;
 		}
 		static int foo_up(lua::State L) {
+			Assert::AreEqual(1, L.Debug_GetStackDepth());
 			L.PushValue(1);
 			L.PushValue(L.Upvalueindex(1));
 			L.Arithmetic(lua::ArihmeticOperator::Add);
@@ -828,6 +829,7 @@ namespace LuappDev
 
 		static int black_magic(lua::State L) {
 			lua::DebugInfo i{};
+			Assert::AreEqual(3, L.Debug_GetStackDepth()); // black_magic, foo, main chunk
 			Assert::IsTrue(L.Debug_GetStack(1, i, lua::DebugInfoOptions::Name, true));
 			Assert::AreEqual("foo", i.Name);
 			Assert::AreEqual(std::string_view{ "foo" }, std::string_view{ L.Debug_GetNameForStackFunc(1) });
@@ -856,6 +858,7 @@ namespace LuappDev
 		TEST_METHOD(LocalAcess) {
 			lua::UniqueState L{};
 			Assert::AreEqual(0, L.GetTop());
+			Assert::AreEqual(0, L.Debug_GetStackDepth());
 
 			L.Push("black_magic");
 			L.Push<black_magic>();
