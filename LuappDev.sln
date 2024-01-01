@@ -12,6 +12,7 @@ Global
 		Debug52|x86 = Debug52|x86
 		Debug53|x86 = Debug53|x86
 		Debug54|x86 = Debug54|x86
+		DebugJIT|x86 = DebugJIT|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug50|x86.ActiveCfg = Debug50|Win32
@@ -24,6 +25,8 @@ Global
 		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug53|x86.Build.0 = Debug53|Win32
 		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug54|x86.ActiveCfg = Debug54|Win32
 		{5BC52392-6389-4745-85D6-79A08F10B440}.Debug54|x86.Build.0 = Debug54|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.DebugJIT|x86.ActiveCfg = DebugJIT|Win32
+		{5BC52392-6389-4745-85D6-79A08F10B440}.DebugJIT|x86.Build.0 = DebugJIT|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

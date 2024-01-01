@@ -10,6 +10,9 @@
 #ifdef LUA51
 #include "luapp/luapp51.h"
 #endif
+#ifdef LUAJIT
+#include "luapp/luappjit.h"
+#endif
 #ifdef LUA52
 #include "luapp/luapp52.h"
 #endif
@@ -614,7 +617,7 @@ namespace LuappDev
 #ifndef LUA50
 			L.ObjLength(1);
 			Assert::AreEqual(
-#ifdef LUA51
+#if defined LUA51 || defined LUAJIT
 				3,
 #else
 				5,
@@ -624,77 +627,83 @@ namespace LuappDev
 		}
 
 		TEST_METHOD(Operators) {
-			lua::UniqueState L{};
-			Assert::AreEqual(0, L.GetTop());
+			try {
+				lua::UniqueState L{};
+				Assert::AreEqual(0, L.GetTop());
 
-			L.Push(5);
-			L.Push(5);
-			L.Push(10);
-			Assert::IsTrue(L.LessThan(1, 3));
-			Assert::IsTrue(L.Compare(1, 3, lua::ComparisonOperator::LessThan));
-			Assert::IsTrue(L.Compare(1, 3, lua::ComparisonOperator::LessThanOrEquals));
-			Assert::IsTrue(L.Equal(1, 2));
-			Assert::IsTrue(L.RawEqual(1, 2));
-			Assert::IsTrue(L.Compare(1, 2, lua::ComparisonOperator::Equals));
-			Assert::IsTrue(L.Compare(1, 2, lua::ComparisonOperator::LessThanOrEquals));
+				L.Push(5);
+				L.Push(5);
+				L.Push(10);
+				Assert::IsTrue(L.LessThan(1, 3));
+				Assert::IsTrue(L.Compare(1, 3, lua::ComparisonOperator::LessThan));
+				Assert::IsTrue(L.Compare(1, 3, lua::ComparisonOperator::LessThanOrEquals));
+				Assert::IsTrue(L.Equal(1, 2));
+				Assert::IsTrue(L.RawEqual(1, 2));
+				Assert::IsTrue(L.Compare(1, 2, lua::ComparisonOperator::Equals));
+				Assert::IsTrue(L.Compare(1, 2, lua::ComparisonOperator::LessThanOrEquals));
 
-			L.Arithmetic(lua::ArihmeticOperator::Add);
-			Assert::AreEqual(lua::Integer{ 15 }, L.CheckInteger(2));
+				L.Arithmetic(lua::ArihmeticOperator::Add);
+				Assert::AreEqual(lua::Integer{ 15 }, L.CheckInteger(2));
 
-			L.Arithmetic(lua::ArihmeticOperator::Subtract);
-			Assert::AreEqual(lua::Integer{ -10 }, L.CheckInteger(1));
+				L.Arithmetic(lua::ArihmeticOperator::Subtract);
+				Assert::AreEqual(lua::Integer{ -10 }, L.CheckInteger(1));
 
-			L.Push(2);
-			L.Arithmetic(lua::ArihmeticOperator::Multiply);
-			Assert::AreEqual(lua::Integer{ -20 }, L.CheckInteger(1));
+				L.Push(2);
+				L.Arithmetic(lua::ArihmeticOperator::Multiply);
+				Assert::AreEqual(lua::Integer{ -20 }, L.CheckInteger(1));
 
-			L.Push(2);
-			L.Arithmetic(lua::ArihmeticOperator::Divide);
-			Assert::AreEqual(lua::Integer{ -10 }, L.CheckInteger(1));
+				L.Push(2);
+				L.Arithmetic(lua::ArihmeticOperator::Divide);
+				Assert::AreEqual(lua::Integer{ -10 }, L.CheckInteger(1));
 
-			L.Arithmetic(lua::ArihmeticOperator::UnaryNegation);
-			Assert::AreEqual(lua::Integer{ 10 }, L.CheckInteger(1));
+				L.Arithmetic(lua::ArihmeticOperator::UnaryNegation);
+				Assert::AreEqual(lua::Integer{ 10 }, L.CheckInteger(1));
 
-			L.Push(4);
-			L.Arithmetic(lua::ArihmeticOperator::Modulo);
-			Assert::AreEqual(lua::Integer{ 2 }, L.CheckInteger(1));
+				L.Push(4);
+				L.Arithmetic(lua::ArihmeticOperator::Modulo);
+				Assert::AreEqual(lua::Integer{ 2 }, L.CheckInteger(1));
 
-			L.Push(4);
-			L.Arithmetic(lua::ArihmeticOperator::Pow);
-			Assert::AreEqual(lua::Integer{ 16 }, L.CheckInteger(1));
-			L.Pop(1);
+				L.Push(4);
+				L.Arithmetic(lua::ArihmeticOperator::Pow);
+				Assert::AreEqual(lua::Integer{ 16 }, L.CheckInteger(1));
+				L.Pop(1);
 
 #ifdef hasbit
-			L.Push(4);
-			L.Push(6);
-			L.Arithmetic(lua::ArihmeticOperator::BitwiseAnd);
-			Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
+				L.Push(4);
+				L.Push(6);
+				L.Arithmetic(lua::ArihmeticOperator::BitwiseAnd);
+				Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
 
-			L.Push(2);
-			L.Arithmetic(lua::ArihmeticOperator::BitwiseOr);
-			Assert::AreEqual(lua::Integer{ 6 }, L.CheckInteger(1));
+				L.Push(2);
+				L.Arithmetic(lua::ArihmeticOperator::BitwiseOr);
+				Assert::AreEqual(lua::Integer{ 6 }, L.CheckInteger(1));
 
-			L.Push(2);
-			L.Arithmetic(lua::ArihmeticOperator::BitwiseXOr);
-			Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
+				L.Push(2);
+				L.Arithmetic(lua::ArihmeticOperator::BitwiseXOr);
+				Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
 
-			L.Push(2);
-			L.Arithmetic(lua::ArihmeticOperator::ShiftLeft);
-			Assert::AreEqual(lua::Integer{ 4 << 2 }, L.CheckInteger(1));
+				L.Push(2);
+				L.Arithmetic(lua::ArihmeticOperator::ShiftLeft);
+				Assert::AreEqual(lua::Integer{ 4 << 2 }, L.CheckInteger(1));
 
-			L.Push(2);
-			L.Arithmetic(lua::ArihmeticOperator::ShiftRight);
-			Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
+				L.Push(2);
+				L.Arithmetic(lua::ArihmeticOperator::ShiftRight);
+				Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
 
-			L.Arithmetic(lua::ArihmeticOperator::BitwiseNot);
-			Assert::AreEqual(~lua::Integer{ 4 }, L.CheckInteger(1));
-			L.Pop(1);
+				L.Arithmetic(lua::ArihmeticOperator::BitwiseNot);
+				Assert::AreEqual(~lua::Integer{ 4 }, L.CheckInteger(1));
+				L.Pop(1);
 #endif
 
-			L.Push(16);
-			L.Push("abc");
-			L.Concat(2);
-			Assert::AreEqual("16abc", L.CheckString(1));
+				L.Push(16);
+				L.Push("abc");
+				L.Concat(2);
+				Assert::AreEqual("16abc", L.CheckString(1));
+			}
+			catch (const lua::LuaException& e) {
+				auto m = ToString(e.what());
+				Assert::Fail(m.c_str());
+			}
 		}
 
 		TEST_METHOD(RunLua) {
