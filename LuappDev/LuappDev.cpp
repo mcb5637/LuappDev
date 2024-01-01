@@ -958,6 +958,9 @@ namespace LuappDev
 		TEST_METHOD(Hook) {
 			lua::UniqueState L{};
 			Assert::AreEqual(0, L.GetTop());
+#ifdef LUAJIT
+			L.SetJITMode(lua::jit::JITMode::On);
+#endif
 
 			L.Debug_SetHook<hook_magic>(lua::HookEvent::Call | lua::HookEvent::Return, 0);
 
