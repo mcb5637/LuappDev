@@ -255,6 +255,11 @@ namespace LuappDev
 			L.NewUserData<IntHolderLua>(t->i >> o->i);
 			return 1;
 		}
+		static int ToString(lua::State L) {
+			auto t = L.GetUserData<IntHolderLua>(1);
+			L.Push(std::format("IntHolder {}", t->i));
+			return 1;
+		}
 	};
 	class DtorTest {
 		std::function<void()> f;
@@ -361,27 +366,33 @@ namespace LuappDev
 			Assert::IsTrue(L.IsNil(1));
 			Assert::IsTrue(L.IsNoneOrNil(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::Nil);
+			Assert::AreEqual(std::string_view{ "nil" }, L.ConvertToString(1));
+			Assert::AreEqual(std::string{ "nil" }, L.ToDebugString(1));
 			L.SetTop(0);
 
 			L.Push(1);
 			Assert::IsTrue(L.IsNumber(1));
 #ifdef hasbit
-				Assert::IsTrue(L.IsInteger(1));
+			Assert::IsTrue(L.IsInteger(1));
 #endif
 			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInteger(1));
 			Assert::AreEqual(1.0, L.CheckNumber(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::Number);
+			Assert::AreEqual(std::string_view{ "1" }, L.ConvertToString(1));
+			Assert::AreEqual(std::string{ "1" }, L.ToDebugString(1));
 			L.SetTop(0);
 
 			L.Push(1.3);
 			Assert::IsTrue(L.IsNumber(1));
 #ifdef hasbit
-				Assert::IsFalse(L.IsInteger(1));
+			Assert::IsFalse(L.IsInteger(1));
 #else
 			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInteger(1));
 #endif
 			Assert::AreEqual(1.3, L.CheckNumber(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::Number);
+			Assert::AreEqual(std::string_view{ "1.3" }, L.ConvertToString(1));
+			Assert::AreEqual(std::string{ "1.3" }, L.ToDebugString(1));
 			L.SetTop(0);
 
 			L.Push("a");
@@ -389,6 +400,8 @@ namespace LuappDev
 			Assert::AreEqual("a", L.CheckString(1));
 			Assert::AreEqual(std::string_view{ "a" }, L.CheckStringView(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::String);
+			Assert::AreEqual(std::string_view{ "a" }, L.ConvertToString(1));
+			Assert::AreEqual(std::string{ "\"a\"" }, L.ToDebugString(1));
 			L.SetTop(0);
 
 			L.PushFString("a %d", 42);
@@ -402,6 +415,8 @@ namespace LuappDev
 			Assert::IsTrue(L.IsBoolean(1));
 			Assert::AreEqual(true, L.CheckBool(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::Boolean);
+			Assert::AreEqual(std::string_view{ "true" }, L.ConvertToString(1));
+			Assert::AreEqual(std::string{ "true" }, L.ToDebugString(1));
 			L.SetTop(0);
 
 			L.PushLightUserdata(&L);
@@ -409,6 +424,8 @@ namespace LuappDev
 			Assert::IsTrue(L.IsLightUserdata(1));
 			Assert::AreEqual(static_cast<void*>(&L), L.ToUserdata(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::LightUserdata);
+			Assert::IsTrue(L.ConvertToString(1).starts_with("userdata: "));
+			Assert::IsTrue(L.ToDebugString(1).starts_with("<LightUserdata "));
 			L.SetTop(0);
 		}
 
@@ -523,8 +540,9 @@ namespace LuappDev
 			Assert::AreEqual(0, L.GetTop());
 
 			L.NewTable();
-			Assert::IsTrue(L.IsTable(1));
 			Assert::AreEqual(1, L.GetTop());
+			Assert::IsTrue(L.IsTable(1));
+			Assert::IsTrue(L.ToDebugString(1).starts_with("<table "));
 
 			L.Push("a");
 			L.Push(42);
@@ -568,6 +586,27 @@ namespace LuappDev
 			Assert::IsTrue(L.GetMetatable(1));
 			Assert::AreEqual(L.ToPointer(2), L.ToPointer(3));
 			Assert::IsTrue(L.RawEqual(2, 3));
+			L.SetTop(0);
+
+			L.Push("abc");
+			L.SetGlobal("xyz");
+			Assert::AreEqual(0, L.GetTop());
+			L.GetGlobal("xyz");
+			Assert::AreEqual(1, L.GetTop());
+			Assert::AreEqual("abc", L.ToString(1));
+			L.SetTop(0);
+
+			L.GetSubTable("glob");
+			Assert::AreEqual(1, L.GetTop());
+			Assert::IsTrue(L.IsTable(1));
+			L.GetSubTable("foo", 1);
+			Assert::AreEqual(2, L.GetTop());
+			Assert::IsTrue(L.IsTable(2));
+			L.GetTableRaw(1, "foo");
+			Assert::IsTrue(L.RawEqual(2, 3));
+			L.Pop(2);
+			L.GetGlobal("glob");
+			Assert::IsTrue(L.RawEqual(1, 2));
 			L.SetTop(0);
 
 			L.DoString("local t = {5,6,7}; setmetatable(t, {__len=function() return 5; end}); return t;");
@@ -667,6 +706,7 @@ namespace LuappDev
 			L.GetGlobal("fool");
 			Assert::IsTrue(L.IsFunction(1));
 			Assert::IsFalse(L.IsCFunction(1));
+			Assert::IsTrue(L.ToDebugString(1).starts_with("<function "));
 
 			L.Push(5);
 			L.Push(42);
@@ -718,6 +758,9 @@ namespace LuappDev
 			L.NewUserData<IntHolderOp>(5);
 			L.SetGlobal("i");
 			L.NewUserData<IntHolderOp>(7);
+			Assert::IsTrue(L.ConvertToString(1).starts_with("class LuappDev::IntHolderOp: "));
+			Assert::IsTrue(L.ToDebugString(1).starts_with("<Userdata class LuappDev::IntHolderOp "));
+			L.Pop(1);
 			L.SetGlobal("j");
 
 			try {
@@ -753,6 +796,8 @@ namespace LuappDev
 			L.NewUserData<IntHolderLua>(5);
 			L.SetGlobal("i");
 			L.NewUserData<IntHolderLua>(7);
+			Assert::AreEqual(std::string_view{"IntHolder 7"}, L.ConvertToString(1));
+			L.Pop(1);
 			L.SetGlobal("j");
 
 			try {
