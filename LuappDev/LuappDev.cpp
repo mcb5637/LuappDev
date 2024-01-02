@@ -797,8 +797,9 @@ namespace LuappDev
 				L.Pop(1);
 
 				L.GetEnvironment(1);
-				Assert::IsTrue(L.RawEqual(2, L.GLOBALSINDEX));
-				L.Pop(1);
+				L.PushGlobalTable();
+				Assert::IsTrue(L.RawEqual(2, 3));
+				L.Pop(2);
 
 				L.NewTable();
 				L.Push(42);
@@ -978,7 +979,7 @@ namespace LuappDev
 		}
 
 		static void hook_magic(lua::State L, lua::ActivationRecord ar) {
-			if (L.Debug_GetEventFromAR(ar) == lua::HookEvent::Return) {
+			if (ar.Matches(lua::HookEvent::Return)) {
 				auto inf = L.Debug_GetInfoFromAR(ar, lua::DebugInfoOptions::Name);
 				if (inf.Name && inf.Name == std::string_view{ "bar" }) {
 					L.Debug_GetStack(1, inf, lua::DebugInfoOptions::Name, true);
@@ -1025,6 +1026,48 @@ namespace LuappDev
 		}
 		TEST_METHOD(Hook) {
 			Hook_T<lua::UniqueState>();
+		}
+
+		static void hook_checkline(lua::State L, lua::ActivationRecord ar) {
+			int t = L.GetTop();
+			if (ar.Matches(lua::HookEvent::Line) && L.Debug_GetNameForStackFunc(0) == "test") {
+				L.PushLightUserdata(&hook_checkline);
+				L.GetTableRaw(L.REGISTRYINDEX);
+				auto* exp = static_cast<int*>(L.ToUserdata(-1));
+				Assert::AreEqual(*exp, ar.Line());
+				++*exp;
+			}
+			L.SetTop(t);
+		}
+		static int activate_hookline(lua::State L) {
+			L.Debug_SetHook<hook_checkline>(lua::HookEvent::Line | lua::HookEvent::Call | lua::HookEvent::Return, 0);
+			return 0;
+		}
+		TEST_METHOD(HookLine) {
+			lua::UniqueState L{};
+			Assert::AreEqual(0, L.GetTop());
+
+			int exp = L.Version() == 5.0 ? 8 : 7;
+
+			L.PushLightUserdata(&hook_checkline);
+			L.PushLightUserdata(&exp);
+			L.SetTableRaw(L.REGISTRYINDEX);
+			L.RegisterFunc<activate_hookline>("activate_hook");
+			L.Debug_SetHook<hook_checkline>(lua::HookEvent::Count, 5000);
+			L.DoStringT("function foo() end\n"
+				"\n"
+				"function test()\n"
+				"foo()\n"
+				"activate_hook()\n"
+				"\n"
+				"foo()\n" // 7
+				"foo()\n"
+				"foo()\n"
+				"foo()\n"
+				"foo()\n"
+				"end\n"
+				"test()\n"); // 13
+			Assert::AreEqual(13, exp);
 		}
 	};
 }
