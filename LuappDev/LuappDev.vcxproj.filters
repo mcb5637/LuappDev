@@ -34,6 +34,9 @@
     <Filter Include="lua\lua54">
       <UniqueIdentifier>{c69be97d-8afb-4ad4-b8a8-6c3624b02660}</UniqueIdentifier>
     </Filter>
+    <Filter Include="lua\luajit">
+      <UniqueIdentifier>{fede80db-c532-44ed-a4c1-fe66b6124f82}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="LuappDev.cpp">
@@ -151,6 +154,24 @@
     </ClInclude>
     <ClInclude Include="luapp\luappjit.h">
       <Filter>luapp</Filter>
+    </ClInclude>
+    <ClInclude Include="luajit\lauxlib.h">
+      <Filter>lua\luajit</Filter>
+    </ClInclude>
+    <ClInclude Include="luajit\lua.h">
+      <Filter>lua\luajit</Filter>
+    </ClInclude>
+    <ClInclude Include="luajit\lua.hpp">
+      <Filter>lua\luajit</Filter>
+    </ClInclude>
+    <ClInclude Include="luajit\luaconf.h">
+      <Filter>lua\luajit</Filter>
+    </ClInclude>
+    <ClInclude Include="luajit\luajit.h">
+      <Filter>lua\luajit</Filter>
+    </ClInclude>
+    <ClInclude Include="luajit\lualib.h">
+      <Filter>lua\luajit</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

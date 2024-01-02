@@ -310,6 +310,12 @@
     <ClInclude Include="lua54\lua.hpp" />
     <ClInclude Include="lua54\luaconf.h" />
     <ClInclude Include="lua54\lualib.h" />
+    <ClInclude Include="luajit\lauxlib.h" />
+    <ClInclude Include="luajit\lua.h" />
+    <ClInclude Include="luajit\lua.hpp" />
+    <ClInclude Include="luajit\luaconf.h" />
+    <ClInclude Include="luajit\luajit.h" />
+    <ClInclude Include="luajit\lualib.h" />
     <ClInclude Include="luapp\constexprTypename.h" />
     <ClInclude Include="luapp\luapp50.h" />
     <ClInclude Include="luapp\luapp51.h" />

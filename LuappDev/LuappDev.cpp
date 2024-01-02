@@ -18,11 +18,9 @@
 #endif
 #ifdef LUA53
 #include "luapp/luapp53.h"
-#define hasbit
 #endif
 #ifdef LUA54
 #include "luapp/luapp54.h"
-#define hasbit
 #endif
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -357,8 +355,9 @@ namespace LuappDev
 			Assert::AreEqual(0, L.GetTop());
 		}
 
-		TEST_METHOD(BaseDatatypes) {
-			lua::UniqueState L{};
+		template<class S>
+		void BaseDatatypes_T() {
+			S L{};
 			Assert::AreEqual(0, L.GetTop());
 
 			Assert::IsTrue(L.IsNone(1));
@@ -375,9 +374,9 @@ namespace LuappDev
 
 			L.Push(1);
 			Assert::IsTrue(L.IsNumber(1));
-#ifdef hasbit
-			Assert::IsTrue(L.IsInteger(1));
-#endif
+			if constexpr (S::Capabilities::NativeIntegers)
+				Assert::IsTrue(L.IsInteger(1));
+
 			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInteger(1));
 			Assert::AreEqual(1.0, L.CheckNumber(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::Number);
@@ -387,11 +386,10 @@ namespace LuappDev
 
 			L.Push(1.3);
 			Assert::IsTrue(L.IsNumber(1));
-#ifdef hasbit
-			Assert::IsFalse(L.IsInteger(1));
-#else
-			Assert::AreEqual(lua::Integer{ 1 }, L.CheckInteger(1));
-#endif
+			if constexpr (S::Capabilities::NativeIntegers)
+				Assert::IsFalse(L.IsInteger(1));
+			else
+				Assert::AreEqual(lua::Integer{ 1 }, L.CheckInteger(1));
 			Assert::AreEqual(1.3, L.CheckNumber(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::Number);
 			Assert::AreEqual(std::string_view{ "1.3" }, L.ConvertToString(1));
@@ -430,6 +428,33 @@ namespace LuappDev
 			Assert::IsTrue(L.ConvertToString(1).starts_with("userdata: "));
 			Assert::IsTrue(L.ToDebugString(1).starts_with("<LightUserdata "));
 			L.SetTop(0);
+
+			if constexpr (S::Capabilities::Uservalues)
+			{
+				if constexpr (S::Capabilities::ArbitraryUservalues) {
+					L.NewUserdata(sizeof(int), 1);
+				}
+				else {
+					L.NewUserdata(sizeof(int));
+				}
+				Assert::IsTrue(L.IsUserdata(1));
+				Assert::IsFalse(L.IsLightUserdata(1));
+				Assert::IsTrue(L.Type(1) == lua::LType::Userdata);
+				Assert::IsTrue(L.ConvertToString(1).starts_with("userdata: "));
+				Assert::IsTrue(L.ToDebugString(1).starts_with("<Userdata "));
+				L.SetTop(1);
+
+				L.NewTable();
+				L.PushValue(2);
+				L.SetUserValue(1);
+				L.GetUserValue(1);
+				Assert::IsTrue(L.IsTable(3));
+				Assert::IsTrue(L.RawEqual(2, 3));
+				L.SetTop(0);
+			}
+		}
+		TEST_METHOD(BaseDatatypes) {
+			BaseDatatypes_T<lua::UniqueState>();
 		}
 
 		static int foo_raw(lua_State* l) {
@@ -538,8 +563,9 @@ namespace LuappDev
 			Assert::AreEqual(12, L.CheckInt(1));
 		}
 
-		TEST_METHOD(Tables) {
-			lua::UniqueState L{};
+		template<class S>
+		void Tables_T() {
+			S L{};
 			Assert::AreEqual(0, L.GetTop());
 
 			L.NewTable();
@@ -614,19 +640,18 @@ namespace LuappDev
 
 			L.DoString("local t = {5,6,7}; setmetatable(t, {__len=function() return 5; end}); return t;");
 			Assert::AreEqual(3u, L.RawLength(1));
-#ifndef LUA50
-			L.ObjLength(1);
-			Assert::AreEqual(
-#if defined LUA51 || defined LUAJIT
-				3,
-#else
-				5,
-#endif
-				L.CheckInt(2));
-#endif
+
+			if constexpr (S::Capabilities::MetatableLengthModulo) {
+				L.ObjLength(1);
+				Assert::AreEqual(S::Capabilities::MetatableLengthOnTables ? 5 : 3, L.CheckInt(2));
+			}
+		}
+		TEST_METHOD(Tables) {
+			Tables_T<lua::UniqueState>();
 		}
 
-		TEST_METHOD(Operators) {
+		template<class S>
+		void Operators_T() {
 			try {
 				lua::UniqueState L{};
 				Assert::AreEqual(0, L.GetTop());
@@ -668,32 +693,32 @@ namespace LuappDev
 				Assert::AreEqual(lua::Integer{ 16 }, L.CheckInteger(1));
 				L.Pop(1);
 
-#ifdef hasbit
-				L.Push(4);
-				L.Push(6);
-				L.Arithmetic(lua::ArihmeticOperator::BitwiseAnd);
-				Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
+				if constexpr (S::Capabilities::NativeIntegers) {
+					L.Push(4);
+					L.Push(6);
+					L.Arithmetic(lua::ArihmeticOperator::BitwiseAnd);
+					Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
 
-				L.Push(2);
-				L.Arithmetic(lua::ArihmeticOperator::BitwiseOr);
-				Assert::AreEqual(lua::Integer{ 6 }, L.CheckInteger(1));
+					L.Push(2);
+					L.Arithmetic(lua::ArihmeticOperator::BitwiseOr);
+					Assert::AreEqual(lua::Integer{ 6 }, L.CheckInteger(1));
 
-				L.Push(2);
-				L.Arithmetic(lua::ArihmeticOperator::BitwiseXOr);
-				Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
+					L.Push(2);
+					L.Arithmetic(lua::ArihmeticOperator::BitwiseXOr);
+					Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
 
-				L.Push(2);
-				L.Arithmetic(lua::ArihmeticOperator::ShiftLeft);
-				Assert::AreEqual(lua::Integer{ 4 << 2 }, L.CheckInteger(1));
+					L.Push(2);
+					L.Arithmetic(lua::ArihmeticOperator::ShiftLeft);
+					Assert::AreEqual(lua::Integer{ 4 << 2 }, L.CheckInteger(1));
 
-				L.Push(2);
-				L.Arithmetic(lua::ArihmeticOperator::ShiftRight);
-				Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
+					L.Push(2);
+					L.Arithmetic(lua::ArihmeticOperator::ShiftRight);
+					Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(1));
 
-				L.Arithmetic(lua::ArihmeticOperator::BitwiseNot);
-				Assert::AreEqual(~lua::Integer{ 4 }, L.CheckInteger(1));
-				L.Pop(1);
-#endif
+					L.Arithmetic(lua::ArihmeticOperator::BitwiseNot);
+					Assert::AreEqual(~lua::Integer{ 4 }, L.CheckInteger(1));
+					L.Pop(1);
+				}
 
 				L.Push(16);
 				L.Push("abc");
@@ -705,9 +730,13 @@ namespace LuappDev
 				Assert::Fail(m.c_str());
 			}
 		}
+		TEST_METHOD(Operators) {
+			Operators_T<lua::UniqueState>();
+		}
 
-		TEST_METHOD(RunLua) {
-			lua::UniqueState L{};
+		template<class S>
+		void RunLua_T() {
+			S L{};
 			Assert::AreEqual(0, L.GetTop());
 
 			L.DoStringT("function fool(a, b) return a+b end");
@@ -757,7 +786,31 @@ namespace LuappDev
 			L.Push("abc");
 			L.TCall(3, 1);
 			Assert::AreEqual(lua::Integer{ 7 + 42 }, L.CheckInteger(1));
-			L.Pop(1);
+			L.SetTop(0);
+
+			if constexpr (S::Capabilities::Environments) {
+				L.DoString("glob = 5; function aglob() return glob; end; return aglob;");
+				Assert::IsTrue(L.IsFunction(1));
+				L.PushValue(1);
+				L.TCall(0, 1);
+				Assert::AreEqual(5.0, *L.ToNumber(2));
+				L.Pop(1);
+
+				L.GetEnvironment(1);
+				Assert::IsTrue(L.RawEqual(2, L.GLOBALSINDEX));
+				L.Pop(1);
+
+				L.NewTable();
+				L.Push(42);
+				L.SetTableRaw(2, "glob");
+				L.SetEnvironment(1);
+				L.TCall(0, 1);
+				Assert::AreEqual(42.0, *L.ToNumber(1));
+				L.SetTop(0);
+			}
+		}
+		TEST_METHOD(RunLua) {
+			RunLua_T<lua::UniqueState>();
 		}
 
 		TEST_METHOD(Userdata) {
@@ -955,12 +1008,13 @@ namespace LuappDev
 			}
 		}
 
-		TEST_METHOD(Hook) {
-			lua::UniqueState L{};
+		template<class S>
+		void Hook_T() {
+			S L{};
 			Assert::AreEqual(0, L.GetTop());
-#ifdef LUAJIT
-			L.SetJITMode(lua::jit::JITMode::On);
-#endif
+
+			if constexpr (S::Capabilities::JIT)
+				L.SetJITMode(S::JITMode::On);
 
 			L.Debug_SetHook<hook_magic>(lua::HookEvent::Call | lua::HookEvent::Return, 0);
 
@@ -968,6 +1022,9 @@ namespace LuappDev
 			Assert::AreEqual(2, L.GetTop());
 			Assert::AreEqual(lua::Integer{ 42 }, L.CheckInteger(1));
 			Assert::AreEqual(lua::Integer{ 4242 }, L.CheckInteger(2));
+		}
+		TEST_METHOD(Hook) {
+			Hook_T<lua::UniqueState>();
 		}
 	};
 }
