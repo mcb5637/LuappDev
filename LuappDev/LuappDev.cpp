@@ -554,6 +554,18 @@ namespace LuappDev
 					L.Push(i + L.CheckInt(1) + L.CheckInt(L.Upvalueindex(2)));
 					return 1;
 				}
+				int PC(lua::State L) const {
+					L.Push(i + 1 + L.CheckInt(1) + L.CheckInt(L.Upvalueindex(2)));
+					return 1;
+				}
+				int G(lua::State L) {
+					L.Push(i);
+					return 1;
+				}
+				int GC(lua::State L) const {
+					L.Push(i + 1);
+					return 1;
+				}
 			};
 			A a{ 5 };
 			L.Push(3);
@@ -561,6 +573,35 @@ namespace LuappDev
 			L.Push(4);
 			L.TCall(1, 1);
 			Assert::AreEqual(12, L.CheckInt(1));
+			L.SetTop(0);
+
+			L.Push(3);
+			L.Push<A, &A::PC>(a, 1);
+			L.Push(4);
+			L.TCall(1, 1);
+			Assert::AreEqual(13, L.CheckInt(1));
+			L.SetTop(0);
+
+			std::array<lua::FuncReference, 2> toregobj{ {
+					lua::FuncReference::GetRef<A, &A::G>(a, "G"),
+					lua::FuncReference::GetRef<A, &A::GC>(a, "GC"),
+			} };
+			L.RegisterGlobalLib(toregobj, "AFuncs");
+			Assert::AreEqual(0, L.GetTop());
+			L.GetGlobal("AFuncs");
+			Assert::IsTrue(L.IsTable(1));
+			L.GetTableRaw(1, "G");
+			Assert::IsTrue(L.IsFunction(2));
+			L.TCall(0, 1);
+			Assert::IsTrue(L.IsNumber(2));
+			Assert::AreEqual(5.0, *L.ToNumber(2));
+			L.SetTop(1);
+			L.GetTableRaw(1, "GC");
+			Assert::IsTrue(L.IsFunction(2));
+			L.TCall(0, 1);
+			Assert::IsTrue(L.IsNumber(2));
+			Assert::AreEqual(6.0, *L.ToNumber(2));
+			L.SetTop(1);
 		}
 
 		template<class S>
