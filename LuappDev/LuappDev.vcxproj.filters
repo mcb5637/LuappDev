@@ -45,10 +45,7 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="luapp\luappjit.cpp">
-      <Filter>luapp</Filter>
-    </ClCompile>
-    <ClCompile Include="luapp\luapp51.cpp">
+    <ClCompile Include="luapp\luapp54.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -172,6 +169,24 @@
     </ClInclude>
     <ClInclude Include="luajit\lualib.h">
       <Filter>lua\luajit</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\luapp54_d.h">
+      <Filter>luapp</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\luapp50_d.h">
+      <Filter>luapp</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\luapp51_d.h">
+      <Filter>luapp</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\luapp52_d.h">
+      <Filter>luapp</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\luapp53_d.h">
+      <Filter>luapp</Filter>
+    </ClInclude>
+    <ClInclude Include="luapp\luappjit_d.h">
+      <Filter>luapp</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

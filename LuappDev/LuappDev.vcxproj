@@ -318,11 +318,17 @@
     <ClInclude Include="luajit\lualib.h" />
     <ClInclude Include="luapp\constexprTypename.h" />
     <ClInclude Include="luapp\luapp50.h" />
+    <ClInclude Include="luapp\luapp50_d.h" />
     <ClInclude Include="luapp\luapp51.h" />
+    <ClInclude Include="luapp\luapp51_d.h" />
     <ClInclude Include="luapp\luapp52.h" />
+    <ClInclude Include="luapp\luapp52_d.h" />
     <ClInclude Include="luapp\luapp53.h" />
+    <ClInclude Include="luapp\luapp53_d.h" />
     <ClInclude Include="luapp\luapp54.h" />
+    <ClInclude Include="luapp\luapp54_d.h" />
     <ClInclude Include="luapp\luappjit.h" />
+    <ClInclude Include="luapp\luappjit_d.h" />
     <ClInclude Include="luapp\luapp_common.h" />
     <ClInclude Include="luapp\luapp_decorator.h" />
     <ClInclude Include="luapp\luapp_userdata.h" />
