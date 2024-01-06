@@ -679,13 +679,17 @@ namespace LuappDev
 			Assert::IsTrue(L.RawEqual(1, 2));
 			L.SetTop(0);
 
-			L.DoString("local t = {5,6,7}; setmetatable(t, {__len=function() return 5; end}); return t;");
+			L.DoStringT("local t = {5,6,7}; setmetatable(t, {__len=function() return 5; end}); return t;");
 			Assert::AreEqual(3u, L.RawLength(1));
 
 			if constexpr (S::Capabilities::MetatableLengthModulo) {
 				L.ObjLength(1);
 				Assert::AreEqual(S::Capabilities::MetatableLengthOnTables ? 5 : 3, L.CheckInt(2));
 			}
+			L.SetTop(0);
+
+			L.DoStringT("local t = {}; t.t = {t=t}; return t;");
+			Assert::IsTrue(L.ToDebugString(1, 10).starts_with("{\n\t[\"t\"] = {\n\t\t[\"t\"] = <table, recursion 0x"));
 		}
 		TEST_METHOD(Tables) {
 			Tables_T<lua::UniqueState>();
