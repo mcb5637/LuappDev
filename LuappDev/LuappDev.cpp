@@ -3,6 +3,7 @@
 
 #include <format>
 #include <functional>
+#include <regex>
 
 #ifdef LUA50
 #include "luapp/luapp50.h"
@@ -272,6 +273,14 @@ namespace LuappDev
 		}
 	};
 
+	bool RegexMatch(const char* p, std::string_view data) {
+		std::regex pattern{ p, std::regex_constants::ECMAScript };
+		return std::regex_match(data.begin(), data.end(), pattern);
+	}
+	void AssertRegex(const char* p, std::string_view data) {
+		Assert::IsTrue(RegexMatch(p, data), ToString(std::format("expected '{}', found '{}'", p, data)).c_str());
+	}
+
 	TEST_CLASS(LuappDev)
 	{
 	public:
@@ -425,8 +434,8 @@ namespace LuappDev
 			Assert::IsTrue(L.IsLightUserdata(1));
 			Assert::AreEqual(static_cast<void*>(&L), L.ToUserdata(1));
 			Assert::IsTrue(L.Type(1) == lua::LType::LightUserdata);
-			Assert::IsTrue(L.ConvertToString(1).starts_with("userdata: "));
-			Assert::IsTrue(L.ToDebugString(1).starts_with("<LightUserdata "));
+			AssertRegex("userdata: 0x[0-9a-f]+", L.ConvertToString(1));
+			AssertRegex("<LightUserdata 0x[0-9a-f]+>", L.ToDebugString(1));
 			L.SetTop(0);
 
 			if constexpr (S::Capabilities::Uservalues)
@@ -440,8 +449,8 @@ namespace LuappDev
 				Assert::IsTrue(L.IsUserdata(1));
 				Assert::IsFalse(L.IsLightUserdata(1));
 				Assert::IsTrue(L.Type(1) == lua::LType::Userdata);
-				Assert::IsTrue(L.ConvertToString(1).starts_with("userdata: "));
-				Assert::IsTrue(L.ToDebugString(1).starts_with("<Userdata "));
+				AssertRegex("userdata: 0x[0-9a-f]+", L.ConvertToString(1));
+				AssertRegex("<Userdata unknown type 0x[0-9a-f]+>", L.ToDebugString(1));
 				L.SetTop(1);
 
 				L.NewTable();
@@ -592,6 +601,7 @@ namespace LuappDev
 			Assert::IsTrue(L.IsTable(1));
 			L.GetTableRaw(1, "G");
 			Assert::IsTrue(L.IsFunction(2));
+			AssertRegex("<function C  AFuncs\\.G \\(defined in: C:0x[0-9a-f]+\\)>", L.ToDebugString(2));
 			L.TCall(0, 1);
 			Assert::IsTrue(L.IsNumber(2));
 			Assert::AreEqual(5.0, *L.ToNumber(2));
@@ -612,7 +622,7 @@ namespace LuappDev
 			L.NewTable();
 			Assert::AreEqual(1, L.GetTop());
 			Assert::IsTrue(L.IsTable(1));
-			Assert::IsTrue(L.ToDebugString(1).starts_with("<table "));
+			AssertRegex("<table 0x[0-9a-f]+>", L.ToDebugString(1));
 
 			L.Push("a");
 			L.Push(42);
@@ -689,7 +699,7 @@ namespace LuappDev
 			L.SetTop(0);
 
 			L.DoStringT("local t = {}; t.t = {t=t}; return t;");
-			Assert::IsTrue(L.ToDebugString(1, 10).starts_with("{\n\t[\"t\"] = {\n\t\t[\"t\"] = <table, recursion 0x"));
+			AssertRegex("\\{\n\t\\[\"t\"\\] = \\{\n\t\t\\[\"t\"\\] = <table, recursion 0x[0-9a-f]+>,\n\t\\},\n\\}", L.ToDebugString(1, 10));
 		}
 		TEST_METHOD(Tables) {
 			Tables_T<lua::UniqueState>();
@@ -789,7 +799,10 @@ namespace LuappDev
 			L.GetGlobal("fool");
 			Assert::IsTrue(L.IsFunction(1));
 			Assert::IsFalse(L.IsCFunction(1));
-			Assert::IsTrue(L.ToDebugString(1).starts_with("<function "));
+			if (L.Version() == 5.0)
+				Assert::AreEqual(std::string{ "<function Lua global fool (defined in: [string \"function fool(a, b) return a+b end\"]:1)>" }, L.ToDebugString(1));
+			else
+				Assert::AreEqual(std::string{ "<function Lua  fool (defined in: [string \"function fool(a, b) return a+b end\"]:1)>" }, L.ToDebugString(1));
 
 			L.Push(5);
 			L.Push(42);
@@ -866,8 +879,8 @@ namespace LuappDev
 			L.NewUserData<IntHolderOp>(5);
 			L.SetGlobal("i");
 			L.NewUserData<IntHolderOp>(7);
-			Assert::IsTrue(L.ConvertToString(1).starts_with("class LuappDev::IntHolderOp: "));
-			Assert::IsTrue(L.ToDebugString(1).starts_with("<Userdata class LuappDev::IntHolderOp "));
+			AssertRegex("class LuappDev::IntHolderOp: 0x[0-9a-f]+", L.ConvertToString(1));
+			AssertRegex("<Userdata class LuappDev::IntHolderOp 0x[0-9a-f]+>", L.ToDebugString(1));
 			L.Pop(1);
 			L.SetGlobal("j");
 
