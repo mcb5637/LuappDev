@@ -983,29 +983,47 @@ namespace LuappDev
 		static int black_magic(lua::State L) {
 			lua::DebugInfo i{};
 			Assert::AreEqual(3, L.Debug_GetStackDepth()); // black_magic, foo, main chunk
-			Assert::IsTrue(L.Debug_GetStack(1, i, lua::DebugInfoOptions::Name, true));
+			Assert::IsTrue(L.Debug_GetStack(1, i, lua::DebugInfoOptions::Name, false));
 			Assert::AreEqual("foo", i.Name);
 			Assert::AreEqual(std::string_view{ "foo" }, std::string_view{ L.Debug_GetNameForStackFunc(1) });
-			int l = 1;
-			while (const char* n = L.Debug_GetLocal(1, l)) {
-				if (n == std::string_view{ "l" }) {
+			int num = 0;
+			for (const auto& l : L.Debug_Locals(1)) {
+				if (l.Name == std::string_view{ "l" }) {
 					Assert::AreEqual(lua::Integer{ 1 }, L.CheckInteger(-1));
 					L.Push(42);
-					Assert::AreEqual("l", L.Debug_SetLocal(1, l));
+					Assert::AreEqual("l", L.Debug_SetLocal(1, l.LocalNum));
+					++num;
+				}
+				else if (l.Name == std::string{ "x" }) {
+					Assert::AreEqual(lua::Integer{ 5 }, L.CheckInteger(-1));
+					++num;
+				}
+				else if (l.Name == std::string{ "y" }) {
+					Assert::AreEqual(lua::Integer{ 6 }, L.CheckInteger(-1));
+					++num;
 				}
 				L.Pop(1);
-				++l;
 			}
-			int u = 1;
-			while (const char* n = L.Debug_GetUpvalue(-1, u)) {
-				if (n == std::string_view{ "upv" }) {
+			Assert::AreEqual(3, num);
+			L.Debug_PushDebugInfoFunc(i);
+			for (const auto& u : L.Debug_Upvalues(-1)) {
+				if (u.Name == std::string_view{ "upv" }) {
 					Assert::AreEqual(lua::Integer{ 0 }, L.CheckInteger(-1));
 					L.Push(4242);
-					Assert::AreEqual("upv", L.Debug_SetUpvalue(-3, u));
+					Assert::AreEqual("upv", L.Debug_SetUpvalue(-3, u.UpvalNum));
+					++num;
+				}
+				else if (u.Name == std::string{ "u2" }) {
+					Assert::AreEqual(lua::Integer{ 4 }, L.CheckInteger(-1));
+					++num;
+				}
+				else if (u.Name == std::string{ "u3" }) {
+					Assert::AreEqual(lua::Integer{ 5 }, L.CheckInteger(-1));
+					++num;
 				}
 				L.Pop(1);
-				++u;
 			}
+			Assert::AreEqual(6, num);
 			return 0;
 		}
 		TEST_METHOD(LocalAcess) {
@@ -1017,7 +1035,7 @@ namespace LuappDev
 			L.Push<black_magic>();
 			L.SetGlobal();
 
-			L.DoStringT("local upv = 0; function foo() local l = 1; black_magic(); return l,upv; end; local a,b = foo(); return a,b;");
+			L.DoStringT("local upv = 0; local u2=4; local u3=5; function foo() local y = 6; local l = 1; local x = 5; black_magic(); u3,u2=u2,u3; return l,upv; end; local a,b = foo(); return a,b;");
 			Assert::AreEqual(2, L.GetTop());
 			Assert::AreEqual(lua::Integer{ 42 }, L.CheckInteger(1));
 			Assert::AreEqual(lua::Integer{ 4242 }, L.CheckInteger(2));
@@ -1027,27 +1045,24 @@ namespace LuappDev
 			if (ar.Matches(lua::HookEvent::Return)) {
 				auto inf = L.Debug_GetInfoFromAR(ar, lua::DebugInfoOptions::Name);
 				if (inf.Name && inf.Name == std::string_view{ "bar" }) {
-					L.Debug_GetStack(1, inf, lua::DebugInfoOptions::Name, true);
+					L.Debug_GetStack(1, inf, lua::DebugInfoOptions::Name, false);
 					Assert::AreEqual("foo", inf.Name);
-					int l = 1;
-					while (const char* n = L.Debug_GetLocal(1, l)) {
-						if (n == std::string_view{ "l" }) {
+					for (const auto& l : L.Debug_Locals(inf)) {
+						if (l.Name == std::string_view{ "l" }) {
 							Assert::AreEqual(lua::Integer{ 1 }, L.CheckInteger(-1));
 							L.Push(42);
-							Assert::AreEqual("l", L.Debug_SetLocal(1, l));
+							Assert::AreEqual("l", L.Debug_SetLocal(1, l.LocalNum));
 						}
 						L.Pop(1);
-						++l;
 					}
-					int u = 1;
-					while (const char* n = L.Debug_GetUpvalue(-1, u)) {
-						if (n == std::string_view{ "upv" }) {
+					L.Debug_PushDebugInfoFunc(inf);
+					for (const auto& u : L.Debug_Upvalues(-1)) {
+						if (u.Name == std::string_view{ "upv" }) {
 							Assert::AreEqual(lua::Integer{ 0 }, L.CheckInteger(-1));
 							L.Push(4242);
-							Assert::AreEqual("upv", L.Debug_SetUpvalue(-3, u));
+							Assert::AreEqual("upv", L.Debug_SetUpvalue(-3, u.UpvalNum));
 						}
 						L.Pop(1);
-						++u;
 					}
 					L.Pop(1);
 				}
