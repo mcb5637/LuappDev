@@ -41,12 +41,12 @@ namespace LuappDev
 		lua::Integer i;
 
 		static int get(lua::State L) {
-			auto t = L.GetUserData<IntHolderOp>(1);
+			auto t = L.CheckUserClass<IntHolderOp>(1);
 			L.Push(t->i);
 			return 1;
 		}
 		static int set(lua::State L) {
-			auto t = L.GetUserData<IntHolderOp>(1);
+			auto t = L.CheckUserClass<IntHolderOp>(1);
 			t->i = L.CheckInt(2);
 			return 0;
 		}
@@ -102,12 +102,12 @@ namespace LuappDev
 		lua::Integer i;
 
 		static int get(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
 			L.Push(t->i);
 			return 1;
 		}
 		static int set(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
 			t->i = L.CheckInt(2);
 			return 0;
 		}
@@ -122,94 +122,94 @@ namespace LuappDev
 		} };
 
 		static int Equals(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
 			L.Push(t->i == o->i);
 			return 1;
 		}
 		static int LessThan(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
 			L.Push(t->i < o->i);
 			return 1;
 		}
 		static int LessOrEquals(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
 			L.Push(t->i <= o->i);
 			return 1;
 		}
 		static int Add(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i + o->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i + o->i);
 			return 1;
 		}
 		static int Substract(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i - o->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i - o->i);
 			return 1;
 		}
 		static int Multiply(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i * o->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i * o->i);
 			return 1;
 		}
 		static int Divide(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i / o->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i / o->i);
 			return 1;
 		}
 		static int Pow(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(static_cast<lua::Integer>(std::pow(t->i, o->i)));
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(static_cast<lua::Integer>(std::pow(t->i, o->i)));
 			return 1;
 		}
 		static int UnaryMinus(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			L.NewUserData<IntHolderLua>(-t->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			L.NewUserClass<IntHolderLua>(-t->i);
 			return 1;
 		}
 		static int Concat(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
 			L.Push(t->i);
 			L.Push(o->i);
 			L.Concat(2);
 			return 1;
 		}
 		static int NewIndex(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
 			if (L.CheckStringView(2) != "i")
 				throw lua::LuaException{ "invalid key" };
 			t->i = L.CheckInt(3);
 			return 0;
 		}
 		static int Index(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
 			if (L.CheckStringView(2) != "i")
 				throw lua::LuaException{ "invalid key" };
 			L.Push(t->i);
 			return 1;
 		}
 		static int Call(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
 			auto o = L.CheckInt(2);
-			L.NewUserData<IntHolderLua>(t->i * o);
+			L.NewUserClass<IntHolderLua>(t->i * o);
 			return 1;
 		}
 		static int Modulo(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i % o->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i % o->i);
 			return 1;
 		}
 		static int Length(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
 			L.Push(t->i);
 			L.ToString(-1);
 			auto l = L.RawLength(-1);
@@ -217,48 +217,48 @@ namespace LuappDev
 			return 1;
 		}
 		static int IntegerDivide(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i / o->i + 1);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i / o->i + 1);
 			return 1;
 		}
 		static int BitwiseAnd(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i & o->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i & o->i);
 			return 1;
 		}
 		static int BitwiseOr(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i | o->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i | o->i);
 			return 1;
 		}
 		static int BitwiseXOr(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i ^ o->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i ^ o->i);
 			return 1;
 		}
 		static int BitwiseNot(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			L.NewUserData<IntHolderLua>(~t->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			L.NewUserClass<IntHolderLua>(~t->i);
 			return 1;
 		}
 		static int ShiftLeft(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i << o->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i << o->i);
 			return 1;
 		}
 		static int ShiftRight(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
-			auto o = L.GetUserData<IntHolderLua>(2);
-			L.NewUserData<IntHolderLua>(t->i >> o->i);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
+			auto o = L.CheckUserClass<IntHolderLua>(2);
+			L.NewUserClass<IntHolderLua>(t->i >> o->i);
 			return 1;
 		}
 		static int ToString(lua::State L) {
-			auto t = L.GetUserData<IntHolderLua>(1);
+			auto t = L.CheckUserClass<IntHolderLua>(1);
 			L.Push(std::format("IntHolder {}", t->i));
 			return 1;
 		}
@@ -269,6 +269,75 @@ namespace LuappDev
 		DtorTest(std::function<void()> f) : f(f) {}
 
 		~DtorTest() {
+			f();
+		}
+	};
+	class InheritanceTestB {
+	protected:
+		lua::Integer i;
+
+		static int geti(lua::State L) {
+			auto t = L.CheckUserClass<InheritanceTestB>(1);
+			L.Push(t->i);
+			return 1;
+		}
+		static int seti(lua::State L) {
+			auto t = L.CheckUserClass<InheritanceTestB>(1);
+			t->i = L.CheckInt(2);
+			return 0;
+		}
+
+	public:
+		using BaseClass = InheritanceTestB;
+
+		InheritanceTestB(lua::Integer i) : i(i) {}
+		virtual ~InheritanceTestB() = default;
+
+		static constexpr std::array<lua::FuncReference, 2> LuaMethods{ {
+				lua::FuncReference::GetRef<geti>("GetI"),
+				lua::FuncReference::GetRef<seti>("SetI"),
+		} };
+
+		InheritanceTestB operator+(const InheritanceTestB& o) const {
+			return { i + o.i };
+		}
+		InheritanceTestB operator-() const {
+			return { -i };
+		}
+	};
+	class InheritanceTestD : public InheritanceTestB {
+		lua::Number j;
+		static int getj(lua::State L) {
+			auto t = L.CheckUserClass<InheritanceTestD>(1);
+			L.Push(t->j);
+			return 1;
+		}
+		static int setj(lua::State L) {
+			auto t = L.CheckUserClass<InheritanceTestD>(1);
+			t->j = L.CheckNumber(2);
+			return 0;
+		}
+
+	public:
+		InheritanceTestD(lua::Integer i, lua::Number j) : InheritanceTestB(i), j(j) {}
+
+		static constexpr std::array<lua::FuncReference, 4> LuaMethods{ {
+				lua::FuncReference::GetRef<geti>("GetI"),
+				lua::FuncReference::GetRef<seti>("SetI"),
+				lua::FuncReference::GetRef<getj>("GetJ"),
+				lua::FuncReference::GetRef<setj>("SetJ"),
+		} };
+
+		InheritanceTestD operator+(const InheritanceTestD& o) const {
+			return { i + o.i, j + o.j };
+		}
+	};
+	class InheritanceTestF : public InheritanceTestB {
+		std::function<void()> f;
+	public:
+		InheritanceTestF(std::function<void()> f) : InheritanceTestB(42), f(f) {}
+
+		virtual ~InheritanceTestF() override {
 			f();
 		}
 	};
@@ -291,11 +360,11 @@ namespace LuappDev
 			lua::UniqueState closer{ L };
 
 			Assert::AreEqual(L.GetState(), closer.GetState());
-			Assert::AreEqual(typeid(DtorTest).name(), typename_details::type_name<DtorTest>());
+			Assert::AreEqual(std::string_view{ typeid(DtorTest).name() }, typename_details::type_name<DtorTest>());
 
 			bool closed = false;
 			{
-				closer.NewUserData<DtorTest>([&closed]() { closed = true; });
+				closer.NewUserClass<DtorTest>([&closed]() { closed = true; });
 
 				Assert::IsFalse(closed);
 
@@ -872,13 +941,14 @@ namespace LuappDev
 			RunLua_T<lua::UniqueState>();
 		}
 
-		TEST_METHOD(Userdata) {
+		TEST_METHOD(UserClass) {
 			lua::UniqueState L{};
 			Assert::AreEqual(0, L.GetTop());
 
-			L.NewUserData<IntHolderOp>(5);
+			L.NewUserClass<IntHolderOp>(5);
 			L.SetGlobal("i");
-			L.NewUserData<IntHolderOp>(7);
+			L.NewUserClass<IntHolderOp>(7);
+			Assert::IsTrue(L.OptionalUserClass<IntHolderLua>(-1) == nullptr);
 			AssertRegex("class LuappDev::IntHolderOp: 0x[0-9a-f]+", L.ConvertToString(1));
 			AssertRegex("<Userdata class LuappDev::IntHolderOp 0x[0-9a-f]+>", L.ToDebugString(1));
 			L.Pop(1);
@@ -914,9 +984,10 @@ namespace LuappDev
 				Assert::Fail(m.c_str());
 			}
 
-			L.NewUserData<IntHolderLua>(5);
+			L.NewUserClass<IntHolderLua>(5);
+			Assert::IsTrue(L.OptionalUserClass<IntHolderOp>(-1) == nullptr);
 			L.SetGlobal("i");
-			L.NewUserData<IntHolderLua>(7);
+			L.NewUserClass<IntHolderLua>(7);
 			Assert::AreEqual(std::string_view{"IntHolder 7"}, L.ConvertToString(1));
 			L.Pop(1);
 			L.SetGlobal("j");
@@ -962,10 +1033,46 @@ namespace LuappDev
 				Assert::Fail(m.c_str());
 			}
 
+			try {
+				L.NewUserClass<InheritanceTestD>(5, 10.0);
+				L.CheckUserClass<InheritanceTestB>(-1);
+				L.CheckUserClass<InheritanceTestD>(-1);
+				Assert::IsTrue(L.OptionalUserClass<InheritanceTestF>(-1) == nullptr);
+				Assert::IsTrue(L.OptionalUserClass<IntHolderLua>(-1) == nullptr);
+				L.SetGlobal("inhd");
+
+				L.NewUserClass<InheritanceTestB>(5);
+				L.CheckUserClass<InheritanceTestB>(-1);
+				Assert::IsTrue(L.OptionalUserClass<InheritanceTestF>(-1) == nullptr);
+				Assert::IsTrue(L.OptionalUserClass<InheritanceTestD>(-1) == nullptr);
+				Assert::IsTrue(L.OptionalUserClass<IntHolderLua>(-1) == nullptr);
+				L.SetGlobal("inhb");
+
+				L.DoStringT("assert(inhd:GetI()==5);\n"
+					"assert(inhd:GetJ()==10);\n"
+					"assert(inhb:GetI()==5);\n"
+					"assert(inhb.GetJ == nil);\n");
+			}
+			catch (const lua::LuaException& e) {
+				auto m = ToString(e.what());
+				Assert::Fail(m.c_str());
+			}
+
 			bool closed = false;
 			{
 				lua::UniqueState L2{};
-				L2.NewUserData<DtorTest>([&closed]() { closed = true; });
+				L2.NewUserClass<DtorTest>([&closed]() { closed = true; });
+				// closing the state forces everything to get gcd
+			}
+			Assert::IsTrue(closed);
+			closed = false;
+			{
+				lua::UniqueState L2{};
+				L2.NewUserClass<InheritanceTestF>([&closed]() { closed = true; });
+				L2.CheckUserClass<InheritanceTestF>(-1);
+				L2.CheckUserClass<InheritanceTestB>(-1);
+				Assert::IsTrue(L2.OptionalUserClass<InheritanceTestD>(-1) == nullptr);
+				Assert::IsTrue(L2.OptionalUserClass<IntHolderLua>(-1) == nullptr);
 				// closing the state forces everything to get gcd
 			}
 			Assert::IsTrue(closed);
