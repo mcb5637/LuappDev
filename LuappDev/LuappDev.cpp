@@ -341,6 +341,44 @@ namespace LuappDev
 			f();
 		}
 	};
+	template<class S>
+	class UservalueTest {
+		static int get(S L) {
+			auto t = L.CheckUserClass<UservalueTest>(1);
+			if constexpr (S::Capabilities::ArbitraryUservalues) {
+				for (int i = 0; i < NumberUserValues; ++i)
+					L.GetUserValue(1, i+1);
+			}
+			else if constexpr (lua::State::Capabilities::Uservalues) {
+				L.GetUserValue(1);
+			}
+			return NumberUserValues;
+		}
+		static int set(S L) {
+			auto t = L.CheckUserClass<UservalueTest>(1);
+			if constexpr (S::Capabilities::ArbitraryUservalues) {
+			for (int i = 0; i < NumberUserValues; ++i)
+				L.SetUserValue(1, i+1);
+			}
+			else if constexpr (lua::State::Capabilities::Uservalues) {
+				L.SetUserValue(1);
+			}
+			return 0;
+		}
+		static int n(S L) {
+			L.Push(NumberUserValues);
+			return 1;
+		}
+
+	public:
+		static constexpr int NumberUserValues = lua::State::Capabilities::Uservalues ? (lua::State::Capabilities::ArbitraryUservalues ? 3 : 1) : 0;
+
+		static constexpr std::array<lua::FuncReference, 3> LuaMethods{ {
+				lua::FuncReference::GetRef<get>("Get"),
+				lua::FuncReference::GetRef<set>("Set"),
+				lua::FuncReference::GetRef<n>("n"),
+		} };
+	};
 
 	bool RegexMatch(const char* p, std::string_view data) {
 		std::regex pattern{ p, std::regex_constants::ECMAScript };
@@ -1056,6 +1094,27 @@ namespace LuappDev
 			catch (const lua::LuaException& e) {
 				auto m = ToString(e.what());
 				Assert::Fail(m.c_str());
+			}
+
+			if constexpr (lua::State::Capabilities::Uservalues) {
+				try {
+					L.NewUserClass<UservalueTest<lua::State>>();
+					L.SetGlobal("uvt");
+					L.DoStringT("if uvt:n()==3 then\n"
+						"uvt:Set(1,2,3)\n"
+						"local a,b,c = uvt:Get()\n"
+						"assert(a==3)\n"
+						"assert(b==2)\n"
+						"assert(c==1)\n"
+						"elseif uvt:n()==1 then\n"
+						"uvt:Set({1})\n"
+						"assert(uvt:Get()[1]==1)\n"
+						"end");
+				}
+				catch (const lua::LuaException& e) {
+					auto m = ToString(e.what());
+					Assert::Fail(m.c_str());
+				}
 			}
 
 			bool closed = false;
