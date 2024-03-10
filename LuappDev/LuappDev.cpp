@@ -805,8 +805,8 @@ namespace LuappDev
 			}
 			L.SetTop(0);
 
-			L.DoStringT("local t = {}; t.t = {t=t}; return t;");
-			AssertRegex("\\{\n\t\\[\"t\"\\] = \\{\n\t\t\\[\"t\"\\] = <table, recursion 0x[0-9a-f]+>,\n\t\\},\n\\}", L.ToDebugString(1, 10));
+			L.DoStringT("local t = {}; t.t = {[1]=t}; return t;");
+			AssertRegex("\\{\n\tt = \\{\n\t\t\\[1\\] = <table, recursion 0x[0-9a-f]+>,\n\t\\},\n\\}", L.ToDebugString(1, 10));
 		}
 		TEST_METHOD(Tables) {
 			Tables_T<lua::UniqueState>();
