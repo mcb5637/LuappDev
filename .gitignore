@@ -379,3 +379,6 @@ FodyWeavers.xsd
 /LuappDev/luajit
 /DebugJIT
 /LuappDev/DebugJIT
+/CMakeUserPresets.json
+/conan_provider.cmake
+/.idea/
