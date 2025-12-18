@@ -1354,4 +1354,57 @@ namespace LuappDev
                     "test()\n"); // 13
         CHECK_EQ(13, exp);
     }
+
+    template<class S>
+    struct StateExt
+    {
+        void Push(std::pair<double, double> f)
+        {
+            auto* t = static_cast<S*>(this);
+            t->NewTable();
+            t->Push("X");
+            t->Push(f.first);
+            t->SetTableRaw(-3);
+            t->Push("Y");
+            t->Push(f.second);
+            t->SetTableRaw(-3);
+        }
+        std::pair<double, double> CheckVec(int i)
+        {
+            auto* t = static_cast<S*>(this);
+            i = t->ToAbsoluteIndex(i);
+            t->CheckType(i, lua::LType::Table);
+            t->GetTableRaw(i, "X");
+            t->GetTableRaw(i, "Y");
+            std::pair<double, double> r{t->CheckNumber(-2), t->CheckNumber(-1)};
+            t->Pop(2);
+            return r;
+        }
+    };
+    int ExtFunc(lua::State::BindExtensions<StateExt> L)
+    {
+        auto v = L.CheckVec(1);
+        L.Push(v.first + v.second);
+        return 1;
+    }
+    TEST_CASE("Extension")
+    {
+        lua::UniqueState::BindExtensions<StateExt> L{};
+        CHECK_EQ(0, L.GetTop());
+        L.Push<ExtFunc>();
+
+        L.Push(std::pair{4.2, 42.0});
+        CHECK(L.GetTop() == 2);
+        L.GetTableRaw(2, "X");
+        CHECK(L.CheckNumber(3) == 4.2);
+        L.Pop(1);
+        L.GetTableRaw(2, "Y");
+        CHECK(L.CheckNumber(3) == 42.0);
+        L.Pop(1);
+
+        CHECK(L.CheckVec(-1) == std::pair{4.2, 42.0});
+        L.TCall(1, 1);
+        CHECK(L.GetTop() == 1);
+        CHECK(L.CheckNumber(1) == 4.2 + 42.0);
+    }
 } // namespace LuappDev
