@@ -351,14 +351,14 @@ namespace LuappDev
     public:
         InheritanceTestF(std::function<void()> f) : InheritanceTestB(42), f(std::move(f)) {}
 
-        virtual ~InheritanceTestF() override { f(); }
+        ~InheritanceTestF() override { f(); }
     };
     template <class S>
     class UservalueTest
     {
         static int get(S L)
         {
-            auto t = L.template CheckUserClass<UservalueTest>(1);
+            L.template CheckUserClass<UservalueTest>(1);
             if constexpr (S::Capabilities::ArbitraryUservalues)
             {
                 for (int i = 0; i < NumberUserValues; ++i)
@@ -372,7 +372,7 @@ namespace LuappDev
         }
         static int set(S L)
         {
-            auto t = L.template CheckUserClass<UservalueTest>(1);
+            L.template CheckUserClass<UservalueTest>(1);
             if constexpr (S::Capabilities::ArbitraryUservalues)
             {
                 for (int i = 0; i < NumberUserValues; ++i)
@@ -433,7 +433,7 @@ namespace LuappDev
         {
             CHECK_EQ(1, L.Debug_GetStackDepth());
             L.PushValue(1);
-            L.PushValue(L.Upvalueindex(1));
+            L.PushValue(lua::State::Upvalueindex(1));
             L.Arithmetic(lua::ArihmeticOperator::Add);
             return 1;
         }
@@ -698,22 +698,22 @@ namespace LuappDev
         {
             int i;
 
-            int P(lua::State L)
+            [[nodiscard]] int P(lua::State L) // NOLINT(*-make-member-function-const)
             {
-                L.Push(i + L.CheckInt(1) + L.CheckInt(L.Upvalueindex(2)));
+                L.Push(i + L.CheckInt(1) + L.CheckInt(lua::State::Upvalueindex(2)));
                 return 1;
             }
-            int PC(lua::State L) const
+            [[nodiscard]] int PC(lua::State L) const
             {
-                L.Push(i + 1 + L.CheckInt(1) + L.CheckInt(L.Upvalueindex(2)));
+                L.Push(i + 1 + L.CheckInt(1) + L.CheckInt(lua::State::Upvalueindex(2)));
                 return 1;
             }
-            int G(lua::State L)
+            [[nodiscard]] int G(lua::State L) // NOLINT(*-make-member-function-const)
             {
                 L.Push(i);
                 return 1;
             }
-            int GC(lua::State L) const
+            [[nodiscard]] int GC(lua::State L) const
             {
                 L.Push(i + 1);
                 return 1;
@@ -1167,6 +1167,7 @@ namespace LuappDev
         int i = 0;
         for (auto k : L.Pairs(1))
         {
+            CHECK(k == lua::LType::Number);
             CHECK_EQ(L.CheckInt(-2) + 4, L.CheckInt(-1));
             ++i;
         }
@@ -1314,7 +1315,7 @@ namespace LuappDev
         if (ar.Matches(lua::HookEvent::Line) && L.Debug_GetNameForStackFunc(0) == "test")
         {
             L.PushLightUserdata(reinterpret_cast<void*>(&hook_checkline));
-            L.GetTableRaw(L.REGISTRYINDEX);
+            L.GetTableRaw(lua::State::REGISTRYINDEX);
             auto* exp = static_cast<int*>(L.ToUserdata(-1));
             CHECK_EQ(*exp, ar.Line());
             ++*exp;
@@ -1331,11 +1332,11 @@ namespace LuappDev
         lua::UniqueState L{};
         CHECK_EQ(0, L.GetTop());
 
-        int exp = L.Version() == 5.0 ? 8 : 7;
+        int exp = lua::State::Version() == 5.0 ? 8 : 7;
 
         L.PushLightUserdata(reinterpret_cast<void*>(&hook_checkline));
         L.PushLightUserdata(&exp);
-        L.SetTableRaw(L.REGISTRYINDEX);
+        L.SetTableRaw(lua::State::REGISTRYINDEX);
         L.RegisterFunc<activate_hookline>("activate_hook");
         L.Debug_SetHook<hook_checkline>(lua::HookEvent::Count, 5000);
         L.DoStringT("function foo() end\n"
