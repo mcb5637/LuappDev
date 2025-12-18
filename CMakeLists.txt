@@ -27,6 +27,7 @@ set(CLANG_WARNINGS
 )
 
 add_compile_options(${CLANG_WARNINGS} -Werror)
+enable_testing()
 
 function(make_lua_version name compileopt pp_compile link)
     add_executable(${name}
