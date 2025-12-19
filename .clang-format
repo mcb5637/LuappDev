@@ -51,5 +51,6 @@ SpacesInAngles: false
 SpacesInConditionalStatement: false
 SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
+SpaceAfterTemplateKeyword: false
 TabWidth: 4
 ...

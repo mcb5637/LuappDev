@@ -44,6 +44,17 @@ std::string demangle(std::string_view v)
 
 namespace LuappDev
 {
+    struct NotLuaCompatible {};
+    static_assert(lua::func::detail::Checkable<lua::State, int>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(int, int)>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)()>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, void(*)(int, int)>);
+    static_assert(!lua::func::detail::AutoTranslateEnabled<lua::State, NotLuaCompatible(*)(int, int)>);
+    static_assert(!lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(int, NotLuaCompatible)>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, std::pair<int, int>(*)()>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, std::tuple<int, int, double>(*)()>);
+    static_assert(!lua::func::detail::AutoTranslateEnabled<lua::State, std::tuple<int, NotLuaCompatible, double>(*)()>);
+
     class IntHolderOp
     {
         lua::Integer i;
@@ -442,10 +453,26 @@ namespace LuappDev
             auto i = L.CheckInt(1);
             throw lua::LuaException{std::format("number is {}", i)};
         }
-        static constexpr std::array<lua::FuncReference, 1> toRegister{{
+        static double api1(double a, double b)
+        {
+            return a + b;
+        }
+        static double api2()
+        {
+            return 42.0;
+        }
+        static void api3(double a)
+        {
+            CHECK(a == 5.0);
+        }
+        static std::tuple<double, std::string_view> api4(int i)
+        {
+            return {static_cast<double>(i) + 0.5, "foo"};
+        }
+        static constexpr std::array toRegister{
             lua::FuncReference::GetRef<foo>("foo"),
-        }};
-
+            lua::FuncReference::GetRef<api1>("api1"),
+        };
     } // namespace funcs
 
     TEST_CASE("CreateDelete")
@@ -550,6 +577,9 @@ namespace LuappDev
             CHECK(L.IsInteger(1));
 
         CHECK(lua::Integer{1} == L.CheckInteger(1));
+        CHECK(1.0 == L.template Check<double>(1));
+        CHECK(1.0f == L.template Check<float>(1));
+        CHECK(L.template Check<int32_t>(1) == 1);
         CHECK(1.0 == L.CheckNumber(1));
         CHECK(L.Type(1) == lua::LType::Number);
         CHECK(std::string_view{"1"} == L.ConvertToString(1));
@@ -559,13 +589,34 @@ namespace LuappDev
         L.Push(1.3);
         CHECK(L.IsNumber(1));
         if constexpr (S::Capabilities::NativeIntegers)
+        {
             CHECK(!L.IsInteger(1));
+            CHECK_THROWS_WITH_AS(L.template Check<int32_t>(1), "bad argument #1 (number has no integer representation)", lua::LuaException);
+        }
         else
+        {
             CHECK(lua::Integer{1} == L.CheckInteger(1));
+            CHECK(L.template Check<int32_t>(1) == 1);
+        }
         CHECK(1.3 == L.CheckNumber(1));
+        CHECK(1.3 == L.template Check<double>(1));
+        CHECK(1.3f == L.template Check<float>(1));
         CHECK(L.Type(1) == lua::LType::Number);
         CHECK(std::string_view{"1.3"} == L.ConvertToString(1));
         CHECK(std::string{"1.3"} == L.ToDebugString(1));
+        if constexpr (S::Capabilities::NativeIntegers)
+            CHECK_THROWS_WITH_AS(L.Push(std::numeric_limits<uint64_t>::max()), "value cannot fit into lua::Integer", lua::LuaException);
+        L.Push(std::numeric_limits<double>::max());
+        if constexpr (S::Capabilities::NativeIntegers)
+            CHECK_THROWS_WITH_AS(L.template Check<int32_t>(-1), "bad argument #-1 (number has no integer representation)", lua::LuaException);
+        else
+            CHECK_THROWS_WITH_AS(L.template Check<int32_t>(-1), "bad argument #-1 (int expected, value out of range)", lua::LuaException);
+        CHECK_THROWS_WITH_AS(L.template Check<float>(-1), "bad argument #-1 (float expected, value out of range)", lua::LuaException);
+        if constexpr (S::Capabilities::NativeIntegers)
+        {
+            L.Push(std::numeric_limits<lua::Integer>::max());
+            CHECK_THROWS_WITH_AS(L.template Check<int32_t>(-1), "bad argument #-1 (int expected, value out of range)", lua::LuaException);
+        }
         L.SetTop(0);
 
         L.Push("a");
@@ -580,13 +631,16 @@ namespace LuappDev
         L.PushFString("a %d", 42);
         CHECK(L.IsString(1));
         CHECK_EQ(std::string_view{"a 42"}, L.CheckString(1));
+        CHECK_EQ(std::string_view{"a 42"}, L.template Check<std::string>(1));
         CHECK_EQ(std::string_view{"a 42"}, L.CheckStringView(1));
+        CHECK_EQ(std::string_view{"a 42"}, L.template Check<std::string_view>(1));
         CHECK(L.Type(1) == lua::LType::String);
         L.SetTop(0);
 
         L.Push(true);
         CHECK(L.IsBoolean(1));
         CHECK_EQ(true, L.CheckBool(1));
+        CHECK(L.template Check<bool>(1) == true);
         CHECK(L.Type(1) == lua::LType::Boolean);
         CHECK_EQ(std::string_view{"true"}, L.ConvertToString(1));
         CHECK_EQ(std::string{"true"}, L.ToDebugString(1));
@@ -671,6 +725,30 @@ namespace LuappDev
         CHECK_EQ(2, L.TCall(2, 2));
         CHECK_EQ(lua::Integer{42 + 5}, L.CheckInteger(1));
         CHECK(L.IsNil(2));
+        L.SetTop(0);
+
+        L.Push<lua::State::AutoTranslateAPI<funcs::api1>>();
+        L.Push(5.0);
+        L.Push(10.05);
+        L.TCall(2, 1);
+        CHECK(L.Check<double>(1) == 15.05);
+        L.SetTop(0);
+
+        L.Push<lua::State::AutoTranslateAPI<funcs::api2>>();
+        L.TCall(0, 1);
+        CHECK(L.Check<double>(1) == 42.0);
+        L.SetTop(0);
+
+        L.Push<lua::State::AutoTranslateAPI<funcs::api3>>();
+        L.Push(5.0);
+        L.TCall(1, 0);
+        L.SetTop(0);
+
+        L.Push<funcs::api4>();
+        L.Push(5);
+        L.TCall(1, 2);
+        CHECK(L.Check<double>(1) == 5.5);
+        CHECK(L.Check<std::string_view>(2) == "foo");
         L.SetTop(0);
 
         L.Push<funcs::ex>();
@@ -959,6 +1037,9 @@ namespace LuappDev
         L.RegisterFuncs(funcs::toRegister);
         L.DoStringT("return foo(6, 666)");
         CHECK_EQ(lua::Integer{6 + 42}, L.CheckInteger(1));
+        L.SetTop(0);
+        L.DoStringT("return api1(5.5, 4.5)");
+        CHECK(L.CheckNumber(1) == 10.0);
         L.SetTop(0);
 
         CHECK(L.DoString("error('number is 6')") != lua::ErrorCode::Success);
@@ -1380,6 +1461,12 @@ namespace LuappDev
             t->Pop(2);
             return r;
         }
+        template<class T>
+        requires std::same_as<T, std::pair<double, double>>
+        std::pair<double, double> Check(int i)
+        {
+            return CheckVec(i);
+        }
     };
     int ExtFunc(lua::State::BindExtensions<StateExt> L)
     {
@@ -1403,6 +1490,7 @@ namespace LuappDev
         L.Pop(1);
 
         CHECK(L.CheckVec(-1) == std::pair{4.2, 42.0});
+        CHECK(L.Check<std::pair<double, double>>(-1) == std::pair{4.2, 42.0});
         L.TCall(1, 1);
         CHECK(L.GetTop() == 1);
         CHECK(L.CheckNumber(1) == 4.2 + 42.0);
