@@ -54,6 +54,8 @@ namespace LuappDev
     static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, std::pair<int, int>(*)()>);
     static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, std::tuple<int, int, double>(*)()>);
     static_assert(!lua::func::detail::AutoTranslateEnabled<lua::State, std::tuple<int, NotLuaCompatible, double>(*)()>);
+    static_assert(!lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible, int)>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible, int), true>);
 
     class IntHolderOp
     {
@@ -796,6 +798,15 @@ namespace LuappDev
                 L.Push(i + 1);
                 return 1;
             }
+
+            [[nodiscard]] double API(double a) // NOLINT(*-make-member-function-const)
+            {
+                return static_cast<double>(i) + a;
+            }
+            [[nodiscard]] double APIC(double a) const
+            {
+                return static_cast<double>(i) + a + 1.0;
+            }
         };
         A a{5};
         L.Push(3);
@@ -812,10 +823,24 @@ namespace LuappDev
         CHECK_EQ(13, L.CheckInt(1));
         L.SetTop(0);
 
-        std::array<lua::FuncReference, 2> toregobj{{
+        L.Push<&A::API>(a);
+        L.Push(5);
+        L.TCall(1, 1);
+        CHECK_EQ(10, L.CheckInt(1));
+        L.SetTop(0);
+
+        L.Push<&A::APIC>(a);
+        L.Push(5);
+        L.TCall(1, 1);
+        CHECK_EQ(11, L.CheckInt(1));
+        L.SetTop(0);
+
+        std::array toregobj{
             lua::FuncReference::GetRef<A, &A::G>(a, "G"),
             lua::FuncReference::GetRef<A, &A::GC>(a, "GC"),
-        }};
+            lua::FuncReference::GetRef<&A::API>(a, "API"),
+            lua::FuncReference::GetRef<&A::APIC>(a, "APIC"),
+        };
         L.RegisterGlobalLib(toregobj, "AFuncs");
         CHECK_EQ(0, L.GetTop());
         L.GetGlobal("AFuncs");
@@ -832,6 +857,16 @@ namespace LuappDev
         L.TCall(0, 1);
         CHECK(L.IsNumber(2));
         CHECK_EQ(6.0, *L.ToNumber(2));
+        L.SetTop(1);
+        L.GetTableRaw(1, "API");
+        L.Push(1);
+        L.TCall(1, 1);
+        CHECK(L.CheckNumber(-1) == 6.0);
+        L.SetTop(1);
+        L.GetTableRaw(1, "APIC");
+        L.Push(1);
+        L.TCall(1, 1);
+        CHECK(L.CheckNumber(-1) == 7.0);
         L.SetTop(1);
     }
 
