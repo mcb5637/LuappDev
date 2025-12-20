@@ -807,6 +807,10 @@ namespace LuappDev
             {
                 return static_cast<double>(i) + a + 1.0;
             }
+            [[nodiscard]] std::tuple<double, int, std::string_view> PARAMS(double a, std::string_view s, int x) const
+            {
+                return {static_cast<double>(i) + a, x + i, s};
+            }
         };
         A a{5};
         L.Push(3);
@@ -840,6 +844,7 @@ namespace LuappDev
             lua::FuncReference::GetRef<A, &A::GC>(a, "GC"),
             lua::FuncReference::GetRef<&A::API>(a, "API"),
             lua::FuncReference::GetRef<&A::APIC>(a, "APIC"),
+            lua::FuncReference::GetRef<&A::PARAMS>(a, "PARAMS"),
         };
         L.RegisterGlobalLib(toregobj, "AFuncs");
         CHECK_EQ(0, L.GetTop());
@@ -867,6 +872,22 @@ namespace LuappDev
         L.Push(1);
         L.TCall(1, 1);
         CHECK(L.CheckNumber(-1) == 7.0);
+        L.SetTop(1);
+        L.GetTableRaw(1, "APIC");
+        {
+            auto [r] = L.TCall<double>(5.0);
+            CHECK(r == 11.0);
+        }
+        CHECK(L.GetTop() == 2);
+        L.SetTop(1);
+        L.GetTableRaw(1, "PARAMS");
+        {
+            auto [r, i, s] = L.TCall<double, int, std::string_view>(5.0, "foo", 1);
+            CHECK(r == 10.0);
+            CHECK(i == 6);
+            CHECK(s == "foo");
+        }
+        CHECK(L.GetTop() == 4);
         L.SetTop(1);
     }
 
@@ -1471,34 +1492,40 @@ namespace LuappDev
         CHECK_EQ(13, exp);
     }
 
+    struct Vec
+    {
+        double x, y;
+
+        auto operator<=>(const Vec&) const = default;
+    };
     template<class S>
     struct StateExt
     {
-        void Push(std::pair<double, double> f)
+        void Push(Vec f)
         {
             auto* t = static_cast<S*>(this);
             t->NewTable();
             t->Push("X");
-            t->Push(f.first);
+            t->Push(f.x);
             t->SetTableRaw(-3);
             t->Push("Y");
-            t->Push(f.second);
+            t->Push(f.y);
             t->SetTableRaw(-3);
         }
-        std::pair<double, double> CheckVec(int i)
+        Vec CheckVec(int i)
         {
             auto* t = static_cast<S*>(this);
             i = t->ToAbsoluteIndex(i);
             t->CheckType(i, lua::LType::Table);
             t->GetTableRaw(i, "X");
             t->GetTableRaw(i, "Y");
-            std::pair<double, double> r{t->CheckNumber(-2), t->CheckNumber(-1)};
+            Vec r{t->CheckNumber(-2), t->CheckNumber(-1)};
             t->Pop(2);
             return r;
         }
         template<class T>
-        requires std::same_as<T, std::pair<double, double>>
-        std::pair<double, double> Check(int i)
+        requires std::same_as<T, Vec>
+        Vec Check(int i)
         {
             return CheckVec(i);
         }
@@ -1506,8 +1533,12 @@ namespace LuappDev
     int ExtFunc(lua::State::BindExtensions<StateExt> L)
     {
         auto v = L.CheckVec(1);
-        L.Push(v.first + v.second);
+        L.Push(v.x + v.y);
         return 1;
+    }
+    Vec ExtFuncAPI(Vec v)
+    {
+        return {v.y, v.x};
     }
     TEST_CASE("Extension")
     {
@@ -1515,7 +1546,7 @@ namespace LuappDev
         CHECK_EQ(0, L.GetTop());
         L.Push<ExtFunc>();
 
-        L.Push(std::pair{4.2, 42.0});
+        L.Push(Vec{4.2, 42.0});
         CHECK(L.GetTop() == 2);
         L.GetTableRaw(2, "X");
         CHECK(L.CheckNumber(3) == 4.2);
@@ -1524,10 +1555,16 @@ namespace LuappDev
         CHECK(L.CheckNumber(3) == 42.0);
         L.Pop(1);
 
-        CHECK(L.CheckVec(-1) == std::pair{4.2, 42.0});
-        CHECK(L.Check<std::pair<double, double>>(-1) == std::pair{4.2, 42.0});
+        CHECK(L.CheckVec(-1) == Vec{4.2, 42.0});
+        CHECK(L.Check<Vec>(-1) == Vec{4.2, 42.0});
         L.TCall(1, 1);
         CHECK(L.GetTop() == 1);
         CHECK(L.CheckNumber(1) == 4.2 + 42.0);
+        L.SetTop(0);
+
+        L.Push<ExtFuncAPI>();
+        auto [r] = L.TCall<Vec>(Vec{1.0, 5.0});
+        CHECK(r == Vec{5.0, 1.0});
+        CHECK(L.GetTop() == 1);
     }
 } // namespace LuappDev
