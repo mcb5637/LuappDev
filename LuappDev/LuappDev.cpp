@@ -55,7 +55,9 @@ namespace LuappDev
     static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, std::tuple<int, int, double>(*)()>);
     static_assert(!lua::func::detail::AutoTranslateEnabled<lua::State, std::tuple<int, NotLuaCompatible, double>(*)()>);
     static_assert(!lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible, int)>);
-    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible, int), true>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible*, int), 1>);
+    static_assert(!lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible*, int), 2>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible*, int*), 2>);
 
     class IntHolderOp
     {
@@ -1566,5 +1568,19 @@ namespace LuappDev
         auto [r] = L.TCall<Vec>(Vec{1.0, 5.0});
         CHECK(r == Vec{5.0, 1.0});
         CHECK(L.GetTop() == 1);
+    }
+
+    TEST_CASE("AutoCleanStack")
+    {
+        lua::UniqueState L{};
+
+        CHECK(L.GetTop() == 0);
+        {
+            auto a = L.AutoCleanStack();
+            L.Push();
+            L.Push(5);
+            CHECK(L.GetTop() == 2);
+        }
+        CHECK(L.GetTop() == 0);
     }
 } // namespace LuappDev
