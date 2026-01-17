@@ -31,7 +31,20 @@ enable_testing()
 
 function(make_lua_version name compileopt pp_compile link)
     add_executable(${name}
-            LuappDev/LuappDev.cpp
+            LuappDev/CreateDelete.cpp
+            LuappDev/StackAccess.cpp
+            LuappDev/BaseDatatypes.cpp
+            LuappDev/Functions.cpp
+            LuappDev/Tables.cpp
+            LuappDev/Operators.cpp
+            LuappDev/RunLua.cpp
+            LuappDev/UserClass.cpp
+            LuappDev/Iterate.cpp
+            LuappDev/LocalAccess.cpp
+            LuappDev/Hook.cpp
+            LuappDev/Extension.cpp
+            LuappDev/AutoCleanStack.cpp
+            LuappDev/Typename.cpp
             ${pp_compile}
     )
 
