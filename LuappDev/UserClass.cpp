@@ -48,6 +48,10 @@ namespace LuappDev
                 S::FuncReference::template GetRef<get>("Get"),
                 S::FuncReference::template GetRef<set>("Set"),
             };
+
+            static constexpr std::array LuaMetaMethods{
+                S::FuncReference::template GetRef<get>("Get"),
+            };
         };
 
         template<class S>
@@ -364,7 +368,6 @@ namespace LuappDev
         };
     }
 
-
     TEST_CASE_TEMPLATE("UserClass", US, lua::UniqueState, ExtUniqueState)
     {
         using S = US::Base;
@@ -374,6 +377,90 @@ namespace LuappDev
         using InheritanceTestB = cls::InheritanceTestB<S>;
         using InheritanceTestD = cls::InheritanceTestD<S>;
         using InheritanceTestF = cls::InheritanceTestF<S>;
+
+        static_assert(lua::userdata::HasLuaMethods<IntHolderOp>);
+        static_assert(lua::userdata::HasLuaMetaMethods<IntHolderOp>);
+        static_assert(!lua::userdata::EquatableCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::EquatableOp<IntHolderOp>);
+        static_assert(!lua::userdata::LessThanCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::LessThanOp<IntHolderOp>);
+        static_assert(!lua::userdata::LessThanEqualsCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::LessThanEqualsOp<IntHolderOp>);
+        static_assert(!lua::userdata::AddCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::AddOp<IntHolderOp>);
+        static_assert(!lua::userdata::SubtractCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::SubtractOp<IntHolderOp>);
+        static_assert(!lua::userdata::MultiplyCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::MultiplyOp<IntHolderOp>);
+        static_assert(!lua::userdata::DivideCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::DivideOp<IntHolderOp>);
+        static_assert(!lua::userdata::IntegerDivideCpp<S, IntHolderOp>);
+        static_assert(!lua::userdata::ModuloCpp<S, IntHolderOp>);
+        static_assert(!lua::userdata::PowCpp<S, IntHolderOp>);
+        static_assert(!lua::userdata::UnaryMinusCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::UnaryMinusOp<IntHolderOp>);
+        static_assert(!lua::userdata::BitwiseAndCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::BitwiseAndOp<IntHolderOp>);
+        static_assert(!lua::userdata::BitwiseOrCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::BitwiseOrOp<IntHolderOp>);
+        static_assert(!lua::userdata::BitwiseXOrCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::BitwiseXOrOp<IntHolderOp>);
+        static_assert(!lua::userdata::BitwiseNotCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::BitwiseNotOp<IntHolderOp>);
+        static_assert(!lua::userdata::ShiftLeftCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::ShiftLeftOp<IntHolderOp>);
+        static_assert(!lua::userdata::ShiftRightCpp<S, IntHolderOp>);
+        static_assert(lua::userdata::ShiftRightOp<IntHolderOp>);
+        static_assert(!lua::userdata::LengthCpp<S, IntHolderOp>);
+        static_assert(!lua::userdata::ConcatCpp<S, IntHolderOp>);
+        static_assert(!lua::userdata::NewIndexCpp<S, IntHolderOp>);
+        static_assert(!lua::userdata::CallCpp<S, IntHolderOp>);
+        static_assert(!lua::userdata::IndexCpp<S, IntHolderOp>);
+        static_assert(!lua::userdata::ToStringCpp<S, IntHolderOp>);
+
+
+        static_assert(lua::userdata::HasLuaMethods<IntHolderLua>);
+        static_assert(!lua::userdata::HasLuaMetaMethods<IntHolderLua>);
+        static_assert(lua::userdata::EquatableCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::EquatableOp<IntHolderLua>);
+        static_assert(lua::userdata::LessThanCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::LessThanOp<IntHolderLua>);
+        static_assert(lua::userdata::LessThanEqualsCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::LessThanEqualsOp<IntHolderLua>);
+        static_assert(lua::userdata::AddCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::AddOp<IntHolderLua>);
+        static_assert(lua::userdata::SubtractCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::SubtractOp<IntHolderLua>);
+        static_assert(lua::userdata::MultiplyCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::MultiplyOp<IntHolderLua>);
+        static_assert(lua::userdata::DivideCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::DivideOp<IntHolderLua>);
+        static_assert(lua::userdata::IntegerDivideCpp<S, IntHolderLua>);
+        static_assert(lua::userdata::ModuloCpp<S, IntHolderLua>);
+        static_assert(lua::userdata::PowCpp<S, IntHolderLua>);
+        static_assert(lua::userdata::UnaryMinusCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::UnaryMinusOp<IntHolderLua>);
+        static_assert(lua::userdata::BitwiseAndCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::BitwiseAndOp<IntHolderLua>);
+        static_assert(lua::userdata::BitwiseOrCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::BitwiseOrOp<IntHolderLua>);
+        static_assert(lua::userdata::BitwiseXOrCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::BitwiseXOrOp<IntHolderLua>);
+        static_assert(lua::userdata::BitwiseNotCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::BitwiseNotOp<IntHolderLua>);
+        static_assert(lua::userdata::ShiftLeftCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::ShiftLeftOp<IntHolderLua>);
+        static_assert(lua::userdata::ShiftRightCpp<S, IntHolderLua>);
+        static_assert(!lua::userdata::ShiftRightOp<IntHolderLua>);
+        static_assert(lua::userdata::LengthCpp<S, IntHolderLua>);
+        static_assert(lua::userdata::ConcatCpp<S, IntHolderLua>);
+        static_assert(lua::userdata::NewIndexCpp<S, IntHolderLua>);
+        static_assert(lua::userdata::CallCpp<S, IntHolderLua>);
+        static_assert(lua::userdata::IndexCpp<S, IntHolderLua>);
+        static_assert(lua::userdata::ToStringCpp<S, IntHolderLua>);
+
+        static_assert(!lua::userdata::BaseDefined<IntHolderLua>);
+        static_assert(lua::userdata::BaseDefined<InheritanceTestB>);
 
         US L{};
         CHECK_EQ(0, L.GetTop());
