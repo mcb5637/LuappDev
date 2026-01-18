@@ -266,8 +266,6 @@ namespace LuappDev
             }
 
         public:
-            using BaseClass = InheritanceTestB;
-
             explicit InheritanceTestB(lua::Integer i) : i(i) {}
             virtual ~InheritanceTestB() = default;
 
@@ -297,6 +295,8 @@ namespace LuappDev
             }
 
         public:
+            using InheritsFrom = std::tuple<InheritanceTestB<S>>;
+
             InheritanceTestD(lua::Integer i, lua::Number j) : InheritanceTestB<S>(i), j(j) {}
 
             static constexpr std::array LuaMethods{
@@ -314,9 +314,83 @@ namespace LuappDev
             std::function<void()> f;
 
         public:
+            using InheritsFrom = std::tuple<InheritanceTestB<S>>;
+
             explicit InheritanceTestF(std::function<void()> f) : InheritanceTestB<S>(42), f(std::move(f)) {}
 
             ~InheritanceTestF() override { f(); }
+        };
+
+        template<class S>
+        class Accumulate
+        {
+            lua::Number n = 0.0;
+
+        protected:
+            static int Add(S L)
+            {
+                auto* th = L.template CheckUserClass<Accumulate>(1);
+                th->n += L.CheckNumber(2);
+                return 0;
+            }
+            static int Get(S L)
+            {
+                auto* th = L.template CheckUserClass<Accumulate>(1);
+                L.Push(th->n);
+                return 1;
+            }
+        public:
+
+            static constexpr std::array LuaMethods{
+                S::FuncReference::template GetRef<Add>("Add"),
+                S::FuncReference::template GetRef<Get>("Get"),
+            };
+        };
+        template<class S>
+        class Append
+        {
+            std::string s;
+
+        protected:
+            static int AddS(S L)
+            {
+                auto* th = L.template CheckUserClass<Append>(1);
+                th->s += L.CheckStringView(2);
+                return 0;
+            }
+            static int GetS(S L)
+            {
+                auto* th = L.template CheckUserClass<Append>(1);
+                L.Push(th->s);
+                return 1;
+            }
+        public:
+
+            static constexpr std::array LuaMethods{
+                S::FuncReference::template GetRef<AddS>("AddS"),
+                S::FuncReference::template GetRef<GetS>("GetS"),
+            };
+        };
+
+        template<class S>
+        class MultiInheritance : public Accumulate<S>, public Append<S>
+        {
+            std::function<void()> f;
+        public:
+            explicit MultiInheritance(std::function<void()> f) : f(std::move(f)) {}
+            ~MultiInheritance()
+            {
+                f();
+            }
+
+            static constexpr std::array LuaMethods{
+                S::FuncReference::template GetRef<Append<S>::AddS>("AddS"),
+                S::FuncReference::template GetRef<Append<S>::GetS>("GetS"),
+                S::FuncReference::template GetRef<Accumulate<S>::Add>("Add"),
+                S::FuncReference::template GetRef<Accumulate<S>::Get>("Get"),
+            };
+
+            using InheritsFrom = std::tuple<Accumulate<S>, Append<S>>;
         };
 
         template<class S>
@@ -377,6 +451,7 @@ namespace LuappDev
         using InheritanceTestB = cls::InheritanceTestB<S>;
         using InheritanceTestD = cls::InheritanceTestD<S>;
         using InheritanceTestF = cls::InheritanceTestF<S>;
+        using MultiInheritance = cls::MultiInheritance<S>;
 
         static_assert(lua::userdata::HasLuaMethods<IntHolderOp>);
         static_assert(lua::userdata::HasLuaMetaMethods<IntHolderOp>);
@@ -459,8 +534,9 @@ namespace LuappDev
         static_assert(lua::userdata::IndexCpp<S, IntHolderLua>);
         static_assert(lua::userdata::ToStringCpp<S, IntHolderLua>);
 
-        static_assert(!lua::userdata::BaseDefined<IntHolderLua>);
-        static_assert(lua::userdata::BaseDefined<InheritanceTestB>);
+        static_assert(!lua::userdata::InheritsDefined<IntHolderLua>);
+        static_assert(lua::userdata::InheritsDefined<InheritanceTestD>);
+        static_assert(lua::userdata::InheritsDefined<InheritanceTestF>);
 
         US L{};
         CHECK_EQ(0, L.GetTop());
@@ -547,29 +623,29 @@ namespace LuappDev
         }
 
         L.template NewUserClass<InheritanceTestD>(5, 10.0);
-        L.template CheckUserClass<InheritanceTestB>(-1);
-        L.template CheckUserClass<InheritanceTestD>(-1);
+        CHECK_NOTHROW(L.template CheckUserClass<InheritanceTestB>(-1));
+        CHECK_NOTHROW(L.template CheckUserClass<InheritanceTestD>(-1));
         CHECK(L.template OptionalUserClass<InheritanceTestF>(-1) == nullptr);
         CHECK(L.template OptionalUserClass<IntHolderLua>(-1) == nullptr);
         L.SetGlobal("inhd");
 
-        L.template NewUserClass<InheritanceTestB>(5);
-        L.template CheckUserClass<InheritanceTestB>(-1);
+        CHECK_NOTHROW(L.template NewUserClass<InheritanceTestB>(5));
+        CHECK_NOTHROW(L.template CheckUserClass<InheritanceTestB>(-1));
         CHECK(L.template OptionalUserClass<InheritanceTestF>(-1) == nullptr);
         CHECK(L.template OptionalUserClass<InheritanceTestD>(-1) == nullptr);
         CHECK(L.template OptionalUserClass<IntHolderLua>(-1) == nullptr);
         L.SetGlobal("inhb");
 
-        L.DoStringT("assert(inhd:GetI()==5);\n"
+        CHECK_NOTHROW(L.DoStringT("assert(inhd:GetI()==5);\n"
                     "assert(inhd:GetJ()==10);\n"
                     "assert(inhb:GetI()==5);\n"
-                    "assert(inhb.GetJ == nil);\n");
+                    "assert(inhb.GetJ == nil);\n"));
 
         if constexpr (S::Capabilities::Uservalues)
         {
             L.template NewUserClass<cls::UservalueTest<S>>();
             L.SetGlobal("uvt");
-            L.DoStringT("if uvt:n()==3 then\n"
+            CHECK_NOTHROW(L.DoStringT("if uvt:n()==3 then\n"
                         "uvt:Set(1,2,3)\n"
                         "local a,b,c = uvt:Get()\n"
                         "assert(a==3)\n"
@@ -578,7 +654,7 @@ namespace LuappDev
                         "elseif uvt:n()==1 then\n"
                         "uvt:Set({1})\n"
                         "assert(uvt:Get()[1]==1)\n"
-                        "end");
+                        "end"));
         }
 
         bool closed = false;
@@ -592,11 +668,25 @@ namespace LuappDev
         {
             US L2{};
             L2.template NewUserClass<InheritanceTestF>([&closed]() { closed = true; });
-            L2.template CheckUserClass<InheritanceTestF>(-1);
-            L2.template CheckUserClass<InheritanceTestB>(-1);
+            CHECK_NOTHROW(L2.template CheckUserClass<InheritanceTestF>(-1));
+            CHECK_NOTHROW(L2.template CheckUserClass<InheritanceTestB>(-1));
             CHECK(L2.template OptionalUserClass<InheritanceTestD>(-1) == nullptr);
             CHECK(L2.template OptionalUserClass<IntHolderLua>(-1) == nullptr);
             // closing the state forces everything to get gcd
+        }
+        CHECK(closed);
+        closed = false;
+        {
+            US L2{};
+            L2.template NewUserClass<MultiInheritance>([&closed]() { closed = true; });
+            CHECK_NOTHROW(L2.template CheckUserClass<MultiInheritance>(-1));
+            L2.SetGlobal("i");
+            CHECK_NOTHROW(L2.DoStringT("assert(i:Get() == 0)\n"
+                        "i:Add(42)\n"
+                        "assert(i:Get() == 42)\n"
+                        "assert(i:GetS() == '')\n"
+                        "i:AddS('foo')\n"
+                        "assert(i:GetS() == 'foo')\n"));
         }
         CHECK(closed);
     }
