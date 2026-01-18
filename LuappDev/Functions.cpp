@@ -37,6 +37,12 @@ namespace LuappDev
             auto i = L.CheckInt(1);
             throw lua::LuaException{std::format("number is {}", i)};
         }
+        struct UnknownExceptionType {};
+        template<class S>
+        static int exUnknown([[maybe_unused]] S L)
+        {
+            throw UnknownExceptionType{}; // NOLINT(*-exception-baseclass)
+        }
         static double run_api(double a, double b)
         {
             return a + b;
@@ -55,9 +61,23 @@ namespace LuappDev
         }
     } // namespace funcs
 
+    std::string ExceptionConverter(std::string_view funcsig)
+    {
+        try
+        {
+            throw;
+        }
+        catch (const funcs::UnknownExceptionType&)
+        {
+            return std::format("unknown exception type caught: {}", funcsig);
+        }
+    }
+
     TEST_CASE_TEMPLATE("Functions", US, lua::UniqueState, ExtUniqueState)
     {
         using S = US::Base;
+
+        S::GetExConv() = &ExceptionConverter;
 
         US L{};
         CHECK_EQ(0, L.GetTop());
@@ -130,20 +150,16 @@ namespace LuappDev
         CHECK(L.PCall(1, 0) == lua::ErrorCode::Runtime);
         CHECK(L.CheckStringView(1).find("number is 5") != std::string_view::npos);
         L.SetTop(0);
-        bool ok = false;
-        try
-        {
-            L.template Push<funcs::ex<S>>();
-            L.Push(5);
-            L.TCall(1, 0);
-            L.SetTop(0);
-        }
-        catch (const lua::LuaException& e)
-        {
-            if (std::string_view{e.what()}.find("number is 5") != std::string_view::npos)
-                ok = true;
-        }
-        CHECK(ok);
+
+        L.template Push<funcs::ex<S>>();
+        L.Push(5);
+        CHECK_THROWS_WITH_AS(L.TCall(1, 0), doctest::Contains("number is 5"), lua::LuaException);
+        L.SetTop(0);
+
+        L.template Push<funcs::exUnknown<S>>();
+        CHECK(L.PCall(0, 0) == lua::ErrorCode::Runtime);
+        CHECK(L.CheckStringView(1).find("unknown exception type caught:") != std::string_view::npos);
+        L.SetTop(0);
 
         L.SetTop(0);
         struct A

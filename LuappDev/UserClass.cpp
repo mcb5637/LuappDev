@@ -471,7 +471,9 @@ namespace LuappDev
         CHECK(L.template OptionalUserClass<IntHolderLua>(-1) == nullptr);
         AssertRegex("LuappDev::cls::IntHolderOp<lua::decorator::State<[:, [:alnum:]]+>>: 0x[0-9a-f]+", L.ConvertToString(1));
         AssertRegex("<Userdata (class )?LuappDev::cls::IntHolderOp<lua::decorator::State<[:, [:alnum:]]+>> 0x[0-9a-f]+>", L.ToDebugString(1));
-        L.Pop(1);
+        CHECK(L.GetMetaField(1, "Get"));
+        CHECK(L.IsCFunction(-1));
+        L.SetTop(1);
         L.SetGlobal("j");
 
         L.DoStringT("assert(i:Get()==5);\n"
