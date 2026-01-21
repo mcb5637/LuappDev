@@ -1,7 +1,8 @@
 #include <doctest/doctest.h>
 
-#include <luaver.h>
 #include <DtorTest.h>
+#include <iostream>
+#include <luaver.h>
 
 namespace LuappDev
 {
@@ -300,8 +301,6 @@ namespace LuappDev
             InheritanceTestD(lua::Integer i, lua::Number j) : InheritanceTestB<S>(i), j(j) {}
 
             static constexpr std::array LuaMethods{
-                S::FuncReference::template GetRef<InheritanceTestB<S>::geti>("GetI"),
-                S::FuncReference::template GetRef<InheritanceTestB<S>::seti>("SetI"),
                 S::FuncReference::template GetRef<getj>("GetJ"),
                 S::FuncReference::template GetRef<setj>("SetJ"),
             };
@@ -315,6 +314,8 @@ namespace LuappDev
 
         public:
             using InheritsFrom = std::tuple<InheritanceTestB<S>>;
+
+            static constexpr std::array<typename S::FuncReference, 0> LuaMethods{};
 
             explicit InheritanceTestF(std::function<void()> f) : InheritanceTestB<S>(42), f(std::move(f)) {}
 
@@ -339,11 +340,18 @@ namespace LuappDev
                 L.Push(th->n);
                 return 1;
             }
+            static int Virt(S L)
+            {
+                [[maybe_unused]] auto* th = L.template CheckUserClass<Accumulate>(1);
+                L.Push(5);
+                return 1;
+            }
         public:
 
             static constexpr std::array LuaMethods{
                 S::FuncReference::template GetRef<Add>("Add"),
                 S::FuncReference::template GetRef<Get>("Get"),
+                S::FuncReference::template GetRef<Virt>("Virt"),
             };
         };
         template<class S>
@@ -376,6 +384,13 @@ namespace LuappDev
         class MultiInheritance : public Accumulate<S>, public Append<S>
         {
             std::function<void()> f;
+            static int Virt(S L)
+            {
+                [[maybe_unused]] auto* th = L.template CheckUserClass<MultiInheritance>(1);
+                L.Push(10);
+                return 1;
+            }
+
         public:
             explicit MultiInheritance(std::function<void()> f) : f(std::move(f)) {}
             ~MultiInheritance()
@@ -384,10 +399,7 @@ namespace LuappDev
             }
 
             static constexpr std::array LuaMethods{
-                S::FuncReference::template GetRef<Append<S>::AddS>("AddS"),
-                S::FuncReference::template GetRef<Append<S>::GetS>("GetS"),
-                S::FuncReference::template GetRef<Accumulate<S>::Add>("Add"),
-                S::FuncReference::template GetRef<Accumulate<S>::Get>("Get"),
+                S::FuncReference::template GetRef<Virt>("Virt"),
             };
 
             using InheritsFrom = std::tuple<Accumulate<S>, Append<S>>;
@@ -686,7 +698,8 @@ namespace LuappDev
                         "assert(i:Get() == 42)\n"
                         "assert(i:GetS() == '')\n"
                         "i:AddS('foo')\n"
-                        "assert(i:GetS() == 'foo')\n"));
+                        "assert(i:GetS() == 'foo')\n"
+                        "assert(i:Virt() == 10)\n"));
         }
         CHECK(closed);
     }
