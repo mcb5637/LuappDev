@@ -22,6 +22,9 @@
 #ifdef LUA54
 #include "luapp/luapp54.h"
 #endif
+#ifdef LUA55
+#include "luapp/luapp55.h"
+#endif
 
 namespace LuappDev
 {

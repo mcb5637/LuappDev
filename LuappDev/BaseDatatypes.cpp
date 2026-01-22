@@ -130,5 +130,17 @@ namespace LuappDev
             CHECK(L.RawEqual(2, 3));
             L.SetTop(0);
         }
+
+        if constexpr (S::Capabilities::ExternalString)
+        {
+            L.PushExternalString("xyz");
+            CHECK(L.IsString(1));
+            CHECK(L.CheckStringView(1) == "xyz");
+            L.SetTop(0);
+
+            L.PushExternalString("xyz", 3);
+            CHECK(L.IsString(1));
+            CHECK(L.CheckStringView(1) == "xyz");
+        }
     }
 }

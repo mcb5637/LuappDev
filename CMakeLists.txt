@@ -57,6 +57,7 @@ function(make_lua_version name compileopt pp_compile link)
     target_link_libraries(${name} PRIVATE doctest::doctest ${link})
 endfunction()
 
+make_lua_version("LuappDev55" "-DLUA55" "LuappDev/luapp/luapp55.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua55/liblua55.a")
 make_lua_version("LuappDev54" "-DLUA54" "LuappDev/luapp/luapp54.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua54/liblua54.a")
 make_lua_version("LuappDev53" "-DLUA53" "LuappDev/luapp/luapp53.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua53/liblua53.a")
 make_lua_version("LuappDev52" "-DLUA52" "LuappDev/luapp/luapp52.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua52/liblua52.a")
