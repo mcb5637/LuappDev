@@ -325,58 +325,56 @@ namespace LuappDev
         template<class S>
         class Accumulate
         {
+        protected:
             lua::Number n = 0.0;
 
-        protected:
-            static int Add(S L)
+        private:
+            int Add(S L)
             {
-                auto* th = L.template CheckUserClass<Accumulate>(1);
-                th->n += L.CheckNumber(2);
+                n += L.CheckNumber(2);
                 return 0;
             }
-            static int Get(S L)
+            [[nodiscard]] int Get(S L) const
             {
-                auto* th = L.template CheckUserClass<Accumulate>(1);
-                L.Push(th->n);
+                L.Push(n);
                 return 1;
             }
-            static int Virt(S L)
+            // ReSharper disable once CppMemberFunctionMayBeStatic
+            int Virt(S L)
             {
-                [[maybe_unused]] auto* th = L.template CheckUserClass<Accumulate>(1);
                 L.Push(5);
                 return 1;
             }
         public:
 
             static constexpr std::array LuaMethods{
-                S::FuncReference::template GetRef<Add>("Add"),
-                S::FuncReference::template GetRef<Get>("Get"),
-                S::FuncReference::template GetRef<Virt>("Virt"),
+                S::FuncReference::template GetUCRef<&Accumulate::Add>("Add"),
+                S::FuncReference::template GetUCRef<&Accumulate::Get>("Get"),
+                S::FuncReference::template GetUCRef<&Accumulate::Virt>("Virt"),
             };
         };
         template<class S>
         class Append
         {
+        protected:
             std::string s;
 
-        protected:
-            static int AddS(S L)
+        private:
+            int AddS(S L)
             {
-                auto* th = L.template CheckUserClass<Append>(1);
-                th->s += L.CheckStringView(2);
+                s += L.CheckStringView(2);
                 return 0;
             }
-            static int GetS(S L)
+            [[nodiscard]] int GetS(S L) const
             {
-                auto* th = L.template CheckUserClass<Append>(1);
-                L.Push(th->s);
+                L.Push(s);
                 return 1;
             }
         public:
 
             static constexpr std::array LuaMethods{
-                S::FuncReference::template GetRef<AddS>("AddS"),
-                S::FuncReference::template GetRef<GetS>("GetS"),
+                S::FuncReference::template GetUCRef<&Append::AddS>("AddS"),
+                S::FuncReference::template GetUCRef<&Append::GetS>("GetS"),
             };
         };
 
@@ -391,6 +389,17 @@ namespace LuappDev
                 return 1;
             }
 
+            [[nodiscard]] std::string Format(int a, std::string_view c, const MultiInheritance& r)
+            {
+                return std::format("a={}, c={}, n={}, s={}", a, c, this->n, r.s);
+            }
+            [[nodiscard]] auto Clone() const
+            {
+                return lua::userdata::PushNewUserClass{std::in_place_type<MultiInheritance>, this->f};
+            }
+            static_assert(lua::func::detail::AutoTranslateEnabled<S, decltype(&MultiInheritance::Format), 0, MultiInheritance>);
+            static_assert(lua::func::detail::IsUserClass<MultiInheritance*, MultiInheritance> && std::is_pointer_v<MultiInheritance*>);
+
         public:
             explicit MultiInheritance(std::function<void()> f) : f(std::move(f)) {}
             ~MultiInheritance()
@@ -400,9 +409,16 @@ namespace LuappDev
 
             static constexpr std::array LuaMethods{
                 S::FuncReference::template GetRef<Virt>("Virt"),
+                S::FuncReference::template GetUCRef<&MultiInheritance::Format>("Format"),
+                S::FuncReference::template GetUCRef<&MultiInheritance::Clone>("Clone"),
             };
 
             using InheritsFrom = std::tuple<Accumulate<S>, Append<S>>;
+
+            static auto SClone(lua::UserClassChecked<MultiInheritance> th)
+            {
+                return lua::PushNewUserClass{std::in_place_type<MultiInheritance>, th->f};
+            }
         };
 
         template<class S>
@@ -687,20 +703,32 @@ namespace LuappDev
             // closing the state forces everything to get gcd
         }
         CHECK(closed);
-        closed = false;
+
+        int num_closed = 0;
         {
             US L2{};
-            L2.template NewUserClass<MultiInheritance>([&closed]() { closed = true; });
+            L2.template NewUserClass<MultiInheritance>([&num_closed]() { ++num_closed; });
             CHECK_NOTHROW(L2.template CheckUserClass<MultiInheritance>(-1));
             L2.SetGlobal("i");
-            CHECK_NOTHROW(L2.DoStringT("assert(i:Get() == 0)\n"
+            L2.template Push<MultiInheritance::SClone>();
+            L2.SetGlobal("Clone");
+            CHECK_NOTHROW(L2.DoStringT("j = i:Clone()\n"
+                        "assert(i:Get() == 0)\n"
                         "i:Add(42)\n"
                         "assert(i:Get() == 42)\n"
                         "assert(i:GetS() == '')\n"
                         "i:AddS('foo')\n"
                         "assert(i:GetS() == 'foo')\n"
-                        "assert(i:Virt() == 10)\n"));
+                        "assert(i:Virt() == 10)\n"
+                        "assert(i:Format(5, 'xy', i) == 'a=5, c=xy, n=42, s=foo')\n"
+                        "assert(j:Get() == 0)\n"
+                        "j:Add(42)\n"
+                        "assert(j:Get() == 42)\n"
+                        "k = Clone(j)\n"
+                        "assert(k:Get() == 0)\n"
+                        "k:Add(42)\n"
+                        "assert(k:Get() == 42)\n"));
         }
-        CHECK(closed);
+        CHECK(num_closed == 3);
     }
 }

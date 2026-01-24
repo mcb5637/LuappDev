@@ -202,14 +202,14 @@ namespace LuappDev
         };
         A a{5};
         L.Push(3);
-        L.template Push<A, &A::P>(a, 1);
+        L.template Push<&A::P>(a, 1);
         L.Push(4);
         L.TCall(1, 1);
         CHECK_EQ(12, L.CheckInt(1));
         L.SetTop(0);
 
         L.Push(3);
-        L.template Push<A, &A::PC>(a, 1);
+        L.template Push<&A::PC>(a, 1);
         L.Push(4);
         L.TCall(1, 1);
         CHECK_EQ(13, L.CheckInt(1));
@@ -228,8 +228,8 @@ namespace LuappDev
         L.SetTop(0);
 
         std::array toregobj{
-            S::FuncReference::template GetRef<A, &A::G>(a, "G"),
-            S::FuncReference::template GetRef<A, &A::GC>(a, "GC"),
+            S::FuncReference::template GetRef<&A::G>(a, "G"),
+            S::FuncReference::template GetRef<&A::GC>(a, "GC"),
             S::FuncReference::template GetRef<&A::API>(a, "API"),
             S::FuncReference::template GetRef<&A::APIC>(a, "APIC"),
             S::FuncReference::template GetRef<&A::PARAMS>(a, "PARAMS"),

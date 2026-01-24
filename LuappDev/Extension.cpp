@@ -18,6 +18,11 @@ namespace LuappDev
     static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible*, int), 1>);
     static_assert(!lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible*, int), 2>);
     static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible*, int*), 2>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible*, int), 0, NotLuaCompatible>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible&, int), 0, NotLuaCompatible>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(const NotLuaCompatible*, int), 0, NotLuaCompatible>);
+    static_assert(lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(const NotLuaCompatible&, int), 0, NotLuaCompatible>);
+    static_assert(!lua::func::detail::AutoTranslateEnabled<lua::State, int(*)(NotLuaCompatible, int), 0, NotLuaCompatible>);
 
     int ExtFunc(ExtState L)
     {
