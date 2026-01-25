@@ -45,6 +45,7 @@ function(make_lua_version name compileopt pp_compile link)
             LuappDev/Extension.cpp
             LuappDev/AutoCleanStack.cpp
             LuappDev/Typename.cpp
+            LuappDev/Serialization.cpp
             ${pp_compile}
     )
 
