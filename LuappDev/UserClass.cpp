@@ -30,6 +30,8 @@ namespace LuappDev
         public:
             explicit IntHolderOp(lua::Integer i) : i(i) {}
 
+            static constexpr bool UserClassOperatorTranslate = true;
+
             auto operator<=>(const IntHolderOp&) const noexcept = default;
 
             IntHolderOp operator+(const IntHolderOp& o) const noexcept { return IntHolderOp{this->i + o.i}; }
@@ -80,6 +82,7 @@ namespace LuappDev
                 S::FuncReference::template GetRef<get>("Get"),
                 S::FuncReference::template GetRef<set>("Set"),
             };
+            static constexpr bool UserClassMetaMethods = true;
 
             static int Equals(S L)
             {
@@ -248,6 +251,127 @@ namespace LuappDev
         };
 
         template<class S>
+        class IntHolderAPI
+        {
+            lua::Integer i;
+
+            lua::Integer get()
+            {
+                return i;
+            }
+            void set(lua::Integer s)
+            {
+                i = s;
+            }
+
+        public:
+            explicit IntHolderAPI(lua::Integer i) : i(i) {}
+
+            static constexpr std::array LuaMethods{
+                S::FuncReference::template GetUCRef<&IntHolderAPI::get>("Get"),
+                S::FuncReference::template GetUCRef<&IntHolderAPI::set>("Set"),
+            };
+            static constexpr bool UserClassMetaMethods = true;
+
+            bool Equals(IntHolderAPI* o)
+            {
+                return i == o->i;
+            }
+            bool LessThan(IntHolderAPI& o)
+            {
+                return i < o.i;
+            }
+            bool LessOrEquals(const IntHolderAPI* o)
+            {
+                return i <= o->i;
+            }
+            auto Add(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i + o->i);
+            }
+            auto Subtract(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i - o->i);
+            }
+            auto Multiply(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i * o->i);
+            }
+            auto Divide(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i / o->i);
+            }
+            auto Pow(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, static_cast<lua::Integer>(std::pow(i, o->i)));
+            }
+            auto UnaryMinus()
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, -i);
+            }
+            std::string Concat(const IntHolderAPI* o)
+            {
+                return std::format("{}{}", i, o->i);
+            }
+            void NewIndex(std::string_view k, lua::Integer v)
+            {
+                if (k != "i")
+                    throw lua::LuaException{"invalid key"};
+                i = v;
+            }
+            lua::Integer Index(std::string_view k)
+            {
+                if (k != "i")
+                    throw lua::LuaException{"invalid key"};
+                return i;
+            }
+            auto Call(lua::Integer o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i * o);
+            }
+            auto Modulo(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i % o->i);
+            }
+            auto Length()
+            {
+                return std::format("{}", i).size();
+            }
+            auto IntegerDivide(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i / o->i + 1);
+            }
+            auto BitwiseAnd(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i & o->i);
+            }
+            auto BitwiseOr(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i | o->i);
+            }
+            auto BitwiseXOr(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i ^ o->i);
+            }
+            auto BitwiseNot()
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, ~i);
+            }
+            auto ShiftLeft(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i << o->i);
+            }
+            auto ShiftRight(const IntHolderAPI* o)
+            {
+                return lua::PushNewUserClass(std::in_place_type<IntHolderAPI>, i >> o->i);
+            }
+            auto ToString()
+            {
+                return std::format("IntHolder {}", i);
+            }
+        };
+
+        template<class S>
         class InheritanceTestB
         {
         protected:
@@ -411,6 +535,8 @@ namespace LuappDev
                 S::FuncReference::template GetRef<Virt>("Virt"),
                 S::FuncReference::template GetUCRef<&MultiInheritance::Format>("Format"),
                 S::FuncReference::template GetUCRef<&MultiInheritance::Clone>("Clone"),
+                S::FuncReference::template GetRef<Virt>(S::MetaEvent::Add),
+                S::FuncReference::template GetUCRef<&MultiInheritance::Format>(S::MetaEvent::Subtract),
             };
 
             using InheritsFrom = std::tuple<Accumulate<S>, Append<S>>;
@@ -470,12 +596,63 @@ namespace LuappDev
         };
     }
 
+    template<class IntHolderLua, class S>
+    void do_holder_lua_tests(S L)
+    {
+
+        L.template NewUserClass<IntHolderLua>(5);
+        L.SetGlobal("i");
+        L.template NewUserClass<IntHolderLua>(7);
+        CHECK_EQ(std::string_view{"IntHolder 7"}, L.ConvertToString(1));
+        L.Pop(1);
+        L.SetGlobal("j");
+
+        L.DoStringT("assert(i:Get()==5);\n"
+                    "j:Set(10);\n"
+                    "assert(j:Get()==10);\n"
+                    "assert((-i):Get()==-5);\n"
+                    "assert((i+j):Get()==15);\n"
+                    "assert((i-j):Get()==-5);\n"
+                    "assert((i*j):Get()==50);\n"
+                    "assert((j/i):Get()==2);\n"
+                    "assert(i<=j);\n"
+                    "assert(i<j);\n"
+                    "assert(i~=j);\n"
+                    "assert(j>i);\n"
+                    "assert(j>=i);\n"
+                    "assert(i==i);\n");
+        L.DoStringT("assert((i^j):Get()==5^10);\n"
+                    "assert(i.i==5);\n"
+                    "local k=i+j; k.i=3; assert(k:Get()==3);\n"
+                    "assert((i..j)=='510');\n"
+                    "assert(i(6).i==5*6);\n");
+        if constexpr (S::Capabilities::MetatableLengthModulo)
+        {
+            L.DoStringT("local a = i+j; a.i=4;\n"
+                        "assert((j%a).i==2);\n"
+                        "assert(#j==2)\n");
+        }
+        if constexpr (S::Capabilities::NativeIntegers)
+        {
+            L.DoStringT("assert((j//i):Get()==3);\n"
+                        "j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
+                        "assert((i&k):Get()==2);\n"
+                        "assert((i|j):Get()==6);\n"
+                        "assert((i~k):Get()==4);\n"
+                        "assert((~i):Get()==~2);\n"
+                        "assert((j<<i):Get()==16);\n"
+                        "assert((j>>i):Get()==1);\n");
+        }
+
+    }
+
     TEST_CASE_TEMPLATE("UserClass", US, lua::UniqueState, ExtUniqueState)
     {
         using S = US::Base;
 
         using IntHolderOp = cls::IntHolderOp<S>;
         using IntHolderLua = cls::IntHolderLua<S>;
+        using IntHolderAPI = cls::IntHolderAPI<S>;
         using InheritanceTestB = cls::InheritanceTestB<S>;
         using InheritanceTestD = cls::InheritanceTestD<S>;
         using InheritanceTestF = cls::InheritanceTestF<S>;
@@ -562,6 +739,46 @@ namespace LuappDev
         static_assert(lua::userdata::IndexCpp<S, IntHolderLua>);
         static_assert(lua::userdata::ToStringCpp<S, IntHolderLua>);
 
+        static_assert(lua::userdata::HasLuaMethods<IntHolderAPI>);
+        static_assert(!lua::userdata::HasLuaMetaMethods<IntHolderAPI>);
+        static_assert(lua::userdata::EquatableCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::EquatableOp<IntHolderAPI>);
+        static_assert(lua::userdata::LessThanCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::LessThanOp<IntHolderAPI>);
+        static_assert(lua::userdata::LessThanEqualsCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::LessThanEqualsOp<IntHolderAPI>);
+        static_assert(lua::userdata::AddCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::AddOp<IntHolderAPI>);
+        static_assert(lua::userdata::SubtractCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::SubtractOp<IntHolderAPI>);
+        static_assert(lua::userdata::MultiplyCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::MultiplyOp<IntHolderAPI>);
+        static_assert(lua::userdata::DivideCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::DivideOp<IntHolderAPI>);
+        static_assert(lua::userdata::IntegerDivideCpp<S, IntHolderAPI>);
+        static_assert(lua::userdata::ModuloCpp<S, IntHolderAPI>);
+        static_assert(lua::userdata::PowCpp<S, IntHolderAPI>);
+        static_assert(lua::userdata::UnaryMinusCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::UnaryMinusOp<IntHolderAPI>);
+        static_assert(lua::userdata::BitwiseAndCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::BitwiseAndOp<IntHolderAPI>);
+        static_assert(lua::userdata::BitwiseOrCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::BitwiseOrOp<IntHolderAPI>);
+        static_assert(lua::userdata::BitwiseXOrCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::BitwiseXOrOp<IntHolderAPI>);
+        static_assert(lua::userdata::BitwiseNotCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::BitwiseNotOp<IntHolderAPI>);
+        static_assert(lua::userdata::ShiftLeftCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::ShiftLeftOp<IntHolderAPI>);
+        static_assert(lua::userdata::ShiftRightCpp<S, IntHolderAPI>);
+        static_assert(!lua::userdata::ShiftRightOp<IntHolderAPI>);
+        static_assert(lua::userdata::LengthCpp<S, IntHolderAPI>);
+        static_assert(lua::userdata::ConcatCpp<S, IntHolderAPI>);
+        static_assert(lua::userdata::NewIndexCpp<S, IntHolderAPI>);
+        static_assert(lua::userdata::CallCpp<S, IntHolderAPI>);
+        static_assert(lua::userdata::IndexCpp<S, IntHolderAPI>);
+        static_assert(lua::userdata::ToStringCpp<S, IntHolderAPI>);
+
         static_assert(!lua::userdata::InheritsDefined<IntHolderLua>);
         static_assert(lua::userdata::InheritsDefined<InheritanceTestD>);
         static_assert(lua::userdata::InheritsDefined<InheritanceTestF>);
@@ -605,50 +822,8 @@ namespace LuappDev
                         "assert((j>>i):Get()==1);\n");
         }
 
-        L.template NewUserClass<IntHolderLua>(5);
-        CHECK(L.template OptionalUserClass<IntHolderOp>(-1) == nullptr);
-        L.SetGlobal("i");
-        L.template NewUserClass<IntHolderLua>(7);
-        CHECK_EQ(std::string_view{"IntHolder 7"}, L.ConvertToString(1));
-        L.Pop(1);
-        L.SetGlobal("j");
-
-        L.DoStringT("assert(i:Get()==5);\n"
-                    "j:Set(10);\n"
-                    "assert(j:Get()==10);\n"
-                    "assert((-i):Get()==-5);\n"
-                    "assert((i+j):Get()==15);\n"
-                    "assert((i-j):Get()==-5);\n"
-                    "assert((i*j):Get()==50);\n"
-                    "assert((j/i):Get()==2);\n"
-                    "assert(i<=j);\n"
-                    "assert(i<j);\n"
-                    "assert(i~=j);\n"
-                    "assert(j>i);\n"
-                    "assert(j>=i);\n"
-                    "assert(i==i);\n");
-        L.DoStringT("assert((i^j):Get()==5^10);\n"
-                    "assert(i.i==5);\n"
-                    "local k=i+j; k.i=3; assert(k:Get()==3);\n"
-                    "assert((i..j)=='510');\n"
-                    "assert(i(6).i==5*6);\n");
-        if constexpr (S::Capabilities::MetatableLengthModulo)
-        {
-            L.DoStringT("local a = i+j; a.i=4;\n"
-                        "assert((j%a).i==2);\n"
-                        "assert(#j==2)\n");
-        }
-        if constexpr (S::Capabilities::NativeIntegers)
-        {
-            L.DoStringT("assert((j//i):Get()==3);\n"
-                        "j:Set(4); i:Set(2); local k=i+j; k:Set(6);\n"
-                        "assert((i&k):Get()==2);\n"
-                        "assert((i|j):Get()==6);\n"
-                        "assert((i~k):Get()==4);\n"
-                        "assert((~i):Get()==~2);\n"
-                        "assert((j<<i):Get()==16);\n"
-                        "assert((j>>i):Get()==1);\n");
-        }
+        do_holder_lua_tests<IntHolderLua, S>(L);
+        do_holder_lua_tests<IntHolderAPI, S>(L);
 
         L.template NewUserClass<InheritanceTestD>(5, 10.0);
         CHECK_NOTHROW(L.template CheckUserClass<InheritanceTestB>(-1));
@@ -727,7 +902,9 @@ namespace LuappDev
                         "k = Clone(j)\n"
                         "assert(k:Get() == 0)\n"
                         "k:Add(42)\n"
-                        "assert(k:Get() == 42)\n"));
+                        "assert(k:Get() == 42)\n"
+                        "assert(k['__add'])\n"
+                        "assert(k['__sub'])\n"));
         }
         CHECK(num_closed == 3);
     }

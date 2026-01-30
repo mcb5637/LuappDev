@@ -10,6 +10,8 @@ namespace LuappDev
     {
         int i = 0;
 
+        static constexpr bool UserClassMetaMethods = true;
+
         static int Serialize(S L)
         {
             auto* th = L.template CheckUserClass<SeriUC>(1);
