@@ -277,5 +277,53 @@ namespace LuappDev
         }
         CHECK(L.GetTop() == 4);
         L.SetTop(1);
+
+        L.SetTop(0);
+        L.Push(42);
+        L.PushLambda([i=0](S l) mutable { l.Push(i++); l.PushValue(S::Upvalueindex(2)); return 2; }, 1);
+        L.PushValue(1);
+        CHECK(L.template TCall<int, int>() == std::tuple{0, 42});
+        L.PushValue(1);
+        CHECK(L.template TCall<int, int>() == std::tuple{1, 42});
+        L.PushValue(1);
+        CHECK(L.template TCall<int, int>() == std::tuple{2, 42});
+        CHECK(L.GetMetatable(1) == false);
+        L.SetTop(0);
+
+        L.PushLambda([i=0](int x) mutable { return i += x; });
+        L.PushValue(1);
+        CHECK(L.template TCall<int>(1) == std::tuple{1});
+        L.PushValue(1);
+        CHECK(L.template TCall<int>(2) == std::tuple{3});
+        L.PushValue(1);
+        CHECK(L.template TCall<int>(3) == std::tuple{6});
+        CHECK(L.GetMetatable(1) == false);
+        L.SetTop(0);
+
+        bool closed = false;
+        {
+            struct Dtor
+            {
+                bool& closed;
+                bool done = false;
+
+                explicit Dtor(bool& b) : closed(b) {}
+                Dtor(Dtor&& o)  noexcept : closed(o.closed)
+                {
+                    o.done = true;
+                }
+
+                ~Dtor()
+                {
+                    if (!done)
+                        closed = true;
+                }
+            };
+
+            US L2{};
+            Dtor dtor{closed};
+            L2.PushLambda([x = std::move(dtor)](S) mutable { return 0; });
+        }
+        CHECK(closed);
     }
 }
