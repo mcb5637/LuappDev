@@ -143,4 +143,51 @@ namespace LuappDev
             CHECK(L.CheckStringView(1) == "xyz");
         }
     }
+
+    TEST_CASE_TEMPLATE("cast ints", To, int16_t, uint16_t)
+    {
+        CHECK(lua::cast_detail::TryCast<To>(int64_t{5}) == To{5});
+        CHECK(lua::cast_detail::TryCast<To>(int64_t{0}) == To{0});
+        CHECK(lua::cast_detail::TryCast<To>(std::numeric_limits<int64_t>::max()) == std::nullopt);
+        CHECK(lua::cast_detail::TryCast<To>(std::numeric_limits<int64_t>::min()) == std::nullopt);
+        if constexpr (!std::unsigned_integral<To>)
+        {
+            CHECK(lua::cast_detail::TryCast<To>(int64_t{-5}) == To{-5});
+        }
+        else
+        {
+            CHECK(lua::cast_detail::TryCast<To>(int64_t{-5}) == std::nullopt);
+        }
+
+        CHECK(lua::cast_detail::TryCast<To>(uint64_t{5}) == To{5});
+        CHECK(lua::cast_detail::TryCast<To>(uint64_t{0}) == To{0});
+        CHECK(lua::cast_detail::TryCast<To>(std::numeric_limits<uint64_t>::max()) == std::nullopt);
+
+        CHECK(lua::cast_detail::TryCast<To>(5.0) == To{5});
+        CHECK(lua::cast_detail::TryCast<To>(0.0) == To{0});
+        CHECK(lua::cast_detail::TryCast<To>(std::numeric_limits<double>::max()) == std::nullopt);
+        CHECK(lua::cast_detail::TryCast<To>(-std::numeric_limits<double>::max()) == std::nullopt);
+        CHECK(lua::cast_detail::TryCast<To>(std::numeric_limits<double>::min()) == To{0});
+        if constexpr (!std::unsigned_integral<To>)
+        {
+            CHECK(lua::cast_detail::TryCast<To>(-5.0) == To{-5});
+            CHECK(lua::cast_detail::TryCast<To>(-std::numeric_limits<double>::min()) == To{0});
+        }
+        else
+        {
+            CHECK(lua::cast_detail::TryCast<To>(-5.0) == std::nullopt);
+            CHECK(lua::cast_detail::TryCast<To>(-std::numeric_limits<double>::min()) == std::nullopt);
+        }
+    }
+    TEST_CASE("cast float")
+    {
+        CHECK(lua::cast_detail::TryCast<float>(5.0) == 5.0f);
+        CHECK(lua::cast_detail::TryCast<float>(0.0) == 0.0f);
+        CHECK(lua::cast_detail::TryCast<float>(std::numeric_limits<double>::max()) == std::nullopt);
+        CHECK(lua::cast_detail::TryCast<float>(-std::numeric_limits<double>::max()) == std::nullopt);
+        CHECK(lua::cast_detail::TryCast<float>(std::numeric_limits<double>::min()) == 0.0f);
+
+        CHECK(lua::cast_detail::TryCast<float>(-5.0) == -5.0f);
+        CHECK(lua::cast_detail::TryCast<float>(-std::numeric_limits<double>::min()) == 0.0f);
+    }
 }
