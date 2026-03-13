@@ -96,27 +96,42 @@ namespace LuappDev
         CHECK_EQ(lua::Integer{7 + 42}, L.CheckInteger(1));
         L.SetTop(0);
 
+
+        L.DoString("glob = 5; function aglob() return glob; end; return aglob;");
+        CHECK(L.IsFunction(1));
+        L.PushValue(1);
+        L.TCall(0, 1);
+        CHECK_EQ(5.0, *L.ToNumber(2));
+        L.Pop(1);
+
+        L.GetEnvironment(1);
+        L.PushGlobalTable();
+        CHECK(L.RawEqual(2, 3));
+        L.Pop(2);
+
+        L.NewTable();
+        L.Push(42);
+        L.SetTableRaw(2, "glob");
+        L.SetEnvironment(1);
+        L.TCall(0, 1);
+        CHECK_EQ(42.0, *L.ToNumber(1));
+        L.SetTop(0);
+
+
+        L.DoString("return function() return 42 end");
+        CHECK(L.IsFunction(1));
         if constexpr (S::Capabilities::Environments)
         {
-            L.DoString("glob = 5; function aglob() return glob; end; return aglob;");
-            CHECK(L.IsFunction(1));
-            L.PushValue(1);
-            L.TCall(0, 1);
-            CHECK_EQ(5.0, *L.ToNumber(2));
-            L.Pop(1);
-
             L.GetEnvironment(1);
             L.PushGlobalTable();
             CHECK(L.RawEqual(2, 3));
             L.Pop(2);
-
-            L.NewTable();
-            L.Push(42);
-            L.SetTableRaw(2, "glob");
-            L.SetEnvironment(1);
-            L.TCall(0, 1);
-            CHECK_EQ(42.0, *L.ToNumber(1));
-            L.SetTop(0);
         }
+        else
+        {
+            L.GetEnvironment(1);
+            CHECK(L.IsNil(2));
+        }
+        L.SetTop(0);
     }
 }

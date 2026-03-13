@@ -49,9 +49,132 @@ namespace LuappDev
                 vs.DeserializeVariable();
                 L.SetGlobal("i");
 
-                L.DoStringT("assert(i[1] == 5)\n"
+                CHECK_NOTHROW(L.DoStringT("assert(i[1] == 5)\n"
                     "assert(i[2] == 'abc')\n"
-                    "assert(i[3]() == 7)\n");
+                    "assert(i[3]() == 7)\n"));
+            }
+        }
+
+        SUBCASE("function globals") {
+            std::stringstream val{};
+
+            {
+                US L{};
+
+                L.DoStringT(R"(foo = 42
+return function()
+    return foo + 500
+end
+)");
+
+                lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{val}, S{L}};
+                L.PushValue(1);
+                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                vs.SerializeVariable(1);
+            }
+            val.seekp(std::ios_base::beg);
+            {
+                US L{};
+
+                lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{val}, S{L}};
+                vs.DeserializeVariable();
+                L.Push(42);
+                L.SetGlobal("foo");
+                L.PushValue(1);
+                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                L.Push(100);
+                L.SetGlobal("foo");
+                L.PushValue(1);
+                CHECK(std::get<0>(L.template TCall<int>()) == 600);
+            }
+        }
+
+        SUBCASE("function globals to env") {
+            std::stringstream val{};
+
+            {
+                US L{};
+
+                L.DoStringT(R"(foo = 42
+return function()
+    return foo + 500
+end
+)");
+
+                lua::serialization::LuaSerializer<lua::serialization::StreamIO<std::stringstream>, S, false, true> vs{lua::serialization::StreamIO{val}, S{L}};
+                L.PushValue(1);
+                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                vs.SerializeVariable(1);
+            }
+            val.seekp(std::ios_base::beg);
+            {
+                US L{};
+
+                lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{val}, S{L}};
+                vs.DeserializeVariable();
+                L.Push(42);
+                L.SetGlobal("foo");
+                L.PushValue(1);
+                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                L.Push(100);
+                L.SetGlobal("foo");
+                L.PushValue(1);
+                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+            }
+        }
+
+        SUBCASE("function env") {
+            std::stringstream val{};
+
+            {
+                US L{};
+
+                L.DoStringT(R"(foo = 1
+return function()
+    return foo + 500
+end, {foo = 42}
+)");
+
+                lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{val}, S{L}};
+                L.SetEnvironment(1);
+                L.PushValue(1);
+                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                vs.SerializeVariable(1);
+            }
+            val.seekp(std::ios_base::beg);
+            {
+                US L{};
+
+                lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{val}, S{L}};
+                vs.DeserializeVariable();
+                L.Push(1);
+                L.SetGlobal("foo");
+                L.PushValue(1);
+                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                L.GetEnvironment(1);
+                L.Push(100);
+                L.SetTableRaw(-2, "foo");
+                L.PushValue(1);
+                CHECK(std::get<0>(L.template TCall<int>()) == 600);
+            }
+        }
+
+        SUBCASE("function dataonly") {
+            std::stringstream val{};
+
+            {
+                US L{};
+
+                L.DoStringT(R"(foo = 42
+return function()
+    return foo + 500
+end
+)");
+
+                lua::serialization::LuaSerializer<lua::serialization::StreamIO<std::stringstream>, S, true, false> vs{lua::serialization::StreamIO{val}, S{L}};
+                L.PushValue(1);
+                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                CHECK_THROWS_WITH_AS(vs.SerializeVariable(1), "functions not allowed", std::format_error);
             }
         }
 
@@ -98,6 +221,17 @@ namespace LuappDev
             vs.DeserializeVariable();
             CHECK(!L.RawEqual(1, 2));
             CHECK(L.template CheckUserClass<UC>(1)->i == L.template CheckUserClass<UC>(2)->i);
+        }
+
+        SUBCASE("userclass dataonly")
+        {
+            US L{};
+            std::stringstream str{};
+            lua::serialization::LuaSerializer<lua::serialization::StreamIO<std::stringstream>, S, true, false> vs{lua::serialization::StreamIO{str}, S{L}};
+
+            using UC = SeriUC<S>;
+            L.template NewUserClass<UC>(500);
+            CHECK_THROWS_WITH_AS(vs.SerializeVariable(-1), "userdata not allowed", std::format_error);
         }
 
         SUBCASE("stack")
@@ -156,13 +290,13 @@ namespace LuappDev
                     lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{val}, S{L}};
                     vs.DeserializeState();
 
-                    L.DoStringT("assert(foo() == 42)\n"
+                    CHECK_NOTHROW(L.DoStringT("assert(foo() == 42)\n"
                         "assert(x == x.y)\n"
                         "assert(x[foo] == 5)\n"
                         "assert(x[5] == foo)\n"
                         "assert(x[-5.5] == foo)\n"
                         "assert(x[x] == foo)\n"
-                        "assert(y == nil)\n");
+                        "assert(y == nil)\n"));
 
                     L.PushSerializedRegistry();
                     L.Push("bar");
@@ -182,16 +316,21 @@ namespace LuappDev
                     {
                         US L{};
 
-                        L.DoStringT("local x = 0\n"
-                            "function foo()\n"
-                            "return x\n"
-                            "end\n"
-                            "function inc()\n"
-                            "x = x + 1\n"
-                            "end\n"
-                            "assert(foo() == 0)\n"
-                            "inc()\n"
-                            "assert(foo() == 1)\n");
+                        L.DoStringT(R"(function create()
+    local x = 0
+    return function() return x end, function() x = x + 1 end
+end
+getx, incx = create()
+gety, incy = create()
+x2 = getx
+
+assert(x2 == getx)
+assert(getx ~= gety)
+assert(getx() == 0)
+incx()
+assert(getx() == 1)
+create = nil
+)");
 
                         lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{val}, S{L}};
                         vs.SerializeState();
@@ -203,9 +342,16 @@ namespace LuappDev
                         lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{val}, S{L}};
                         vs.DeserializeState();
 
-                        L.DoStringT("assert(foo() == 1)\n"
-                            "inc()\n"
-                            "assert(foo() == 2)\n");
+                        CHECK_NOTHROW(L.DoStringT(R"(assert(create == nil)
+assert(x2 == getx)
+assert(getx ~= gety)
+assert(getx() == 1)
+incx()
+assert(getx() == 2)
+assert(gety() == 0)
+incy()
+assert(gety() == 1)
+)"));
                     }
                 }
             }
