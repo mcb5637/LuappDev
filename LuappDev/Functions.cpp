@@ -300,6 +300,12 @@ namespace LuappDev
         CHECK(L.GetMetatable(1) == false);
         L.SetTop(0);
 
+        L.PushLambda([](std::optional<int> x) { return x; });
+        L.PushValue(1);
+        CHECK(L.template TCall<int>(1) == std::tuple{1});
+        L.PushValue(1);
+        CHECK(L.template TCall<std::optional<int>>() == std::tuple{std::nullopt});
+
         bool closed = false;
         {
             struct Dtor
