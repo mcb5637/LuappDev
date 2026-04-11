@@ -19,13 +19,37 @@ namespace LuappDev
             L.Push(th->i);
             return 2;
         }
-        static int Deserialize(S L)
+        static int Deseri(S L)
         {
             L.template NewUserClass<SeriUC>(L.template Check<int>(1));
             return 1;
         }
     };
     static_assert(lua::userdata::SerializeCpp<lua::State, SeriUC<lua::State>>);
+    static_assert(!lua::userdata::DeserializeCpp<lua::State, SeriUC<lua::State>>);
+
+    template<class S>
+    struct SeriUCAuto
+    {
+        int i = 0;
+
+        static constexpr bool UserClassMetaMethods = true;
+
+        static int Serialize(S L)
+        {
+            auto* th = L.template CheckUserClass<SeriUCAuto<S>>(1);
+            L.Push(typename_details::type_name<SeriUCAuto<S>>());
+            L.Push(th->i);
+            return 2;
+        }
+        static int Deserialize(S L)
+        {
+            L.template NewUserClass<SeriUCAuto<S>>(L.template Check<int>(1));
+            return 1;
+        }
+    };
+    static_assert(lua::userdata::SerializeCpp<lua::State, SeriUCAuto<lua::State>>);
+    static_assert(lua::userdata::DeserializeCpp<lua::State, SeriUCAuto<lua::State>>);
 
     TEST_CASE_TEMPLATE("Serialization", US, lua::UniqueState, ExtUniqueState)
     {
@@ -214,11 +238,28 @@ end
             vs.GetUserdataDeserializer = [](std::string_view s) -> lua::CFunction
             {
                 if (s == "SeriUC")
-                    return &S::template CppToCFunction<UC::Deserialize>;
+                    return &S::template CppToCFunction<UC::Deseri>;
                 return nullptr;
             };
 
-            vs.DeserializeVariable();
+            CHECK_NOTHROW(vs.DeserializeVariable());
+            CHECK(!L.RawEqual(1, 2));
+            CHECK(L.template CheckUserClass<UC>(1)->i == L.template CheckUserClass<UC>(2)->i);
+        }
+
+        SUBCASE("userclass meta")
+        {
+            US L{};
+            std::stringstream str{};
+            lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{str}, S{L}};
+
+            using UC = SeriUCAuto<S>;
+            L.template NewUserClass<UC>(500);
+            vs.SerializeVariable(-1);
+
+            str.seekp(std::ios_base::beg);
+
+            CHECK_NOTHROW(vs.DeserializeVariable());
             CHECK(!L.RawEqual(1, 2));
             CHECK(L.template CheckUserClass<UC>(1)->i == L.template CheckUserClass<UC>(2)->i);
         }
