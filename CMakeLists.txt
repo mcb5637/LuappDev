@@ -49,7 +49,7 @@ function(make_lua_version name compileopt pp_compile link)
             ${pp_compile}
     )
 
-    target_compile_options(${name} PUBLIC ${compileopt})
+    target_compile_definitions(${name} PUBLIC ${compileopt})
 
     add_test(NAME ${name} COMMAND ${name})
 
