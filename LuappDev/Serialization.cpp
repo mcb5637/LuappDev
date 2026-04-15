@@ -93,7 +93,7 @@ end
 
                 lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{val}, S{L}};
                 L.PushValue(1);
-                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                CHECK(L.template TCall<int>() == 542);
                 vs.SerializeVariable(1);
             }
             val.seekp(std::ios_base::beg);
@@ -105,11 +105,11 @@ end
                 L.Push(42);
                 L.SetGlobal("foo");
                 L.PushValue(1);
-                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                CHECK(L.template TCall<int>() == 542);
                 L.Push(100);
                 L.SetGlobal("foo");
                 L.PushValue(1);
-                CHECK(std::get<0>(L.template TCall<int>()) == 600);
+                CHECK(L.template TCall<int>() == 600);
             }
         }
 
@@ -127,7 +127,7 @@ end
 
                 lua::serialization::LuaSerializer<lua::serialization::StreamIO<std::stringstream>, S, false, true> vs{lua::serialization::StreamIO{val}, S{L}};
                 L.PushValue(1);
-                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                CHECK(L.template TCall<int>() == 542);
                 vs.SerializeVariable(1);
             }
             val.seekp(std::ios_base::beg);
@@ -139,11 +139,11 @@ end
                 L.Push(42);
                 L.SetGlobal("foo");
                 L.PushValue(1);
-                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                CHECK(L.template TCall<int>() == 542);
                 L.Push(100);
                 L.SetGlobal("foo");
                 L.PushValue(1);
-                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                CHECK(L.template TCall<int>() == 542);
             }
         }
 
@@ -162,7 +162,7 @@ end, {foo = 42}
                 lua::serialization::LuaSerializer vs{lua::serialization::StreamIO{val}, S{L}};
                 L.SetEnvironment(1);
                 L.PushValue(1);
-                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                CHECK(L.template TCall<int>() == 542);
                 vs.SerializeVariable(1);
             }
             val.seekp(std::ios_base::beg);
@@ -174,12 +174,12 @@ end, {foo = 42}
                 L.Push(1);
                 L.SetGlobal("foo");
                 L.PushValue(1);
-                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                CHECK(L.template TCall<int>() == 542);
                 L.GetEnvironment(1);
                 L.Push(100);
                 L.SetTableRaw(-2, "foo");
                 L.PushValue(1);
-                CHECK(std::get<0>(L.template TCall<int>()) == 600);
+                CHECK(L.template TCall<int>() == 600);
             }
         }
 
@@ -197,7 +197,7 @@ end
 
                 lua::serialization::LuaSerializer<lua::serialization::StreamIO<std::stringstream>, S, true, false> vs{lua::serialization::StreamIO{val}, S{L}};
                 L.PushValue(1);
-                CHECK(std::get<0>(L.template TCall<int>()) == 542);
+                CHECK(L.template TCall<int>() == 542);
                 CHECK_THROWS_WITH_AS(vs.SerializeVariable(1), "functions not allowed", std::format_error);
             }
         }

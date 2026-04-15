@@ -11,7 +11,7 @@ namespace LuappDev
             lua::State L{l};
             L.PushValue(1);
             L.Push(42);
-            L.Arithmetic(lua::ArihmeticOperator::Add);
+            L.Arithmetic(lua::ArithmeticOperator::Add);
             return 1;
         }
         template<class S>
@@ -19,7 +19,7 @@ namespace LuappDev
         {
             L.PushValue(1);
             L.Push(42);
-            L.Arithmetic(lua::ArihmeticOperator::Add);
+            L.Arithmetic(lua::ArithmeticOperator::Add);
             return 1;
         }
         template<class S>
@@ -28,7 +28,7 @@ namespace LuappDev
             CHECK_EQ(1, L.Debug_GetStackDepth());
             L.PushValue(1);
             L.PushValue(S::Upvalueindex(1));
-            L.Arithmetic(lua::ArihmeticOperator::Add);
+            L.Arithmetic(lua::ArithmeticOperator::Add);
             return 1;
         }
         template<class S>
@@ -263,7 +263,7 @@ namespace LuappDev
         L.SetTop(1);
         L.GetTableRaw(1, "APIC");
         {
-            auto [r] = L.template TCall<double>(5.0);
+            auto r = L.template TCall<double>(5.0);
             CHECK(r == 11.0);
         }
         CHECK(L.GetTop() == 2);
@@ -292,19 +292,19 @@ namespace LuappDev
 
         L.PushLambda([i=0](int x) mutable { return i += x; });
         L.PushValue(1);
-        CHECK(L.template TCall<int>(1) == std::tuple{1});
+        CHECK(L.template TCall<int>(1) == 1);
         L.PushValue(1);
-        CHECK(L.template TCall<int>(2) == std::tuple{3});
+        CHECK(L.template TCall<int>(2) == 3);
         L.PushValue(1);
-        CHECK(L.template TCall<int>(3) == std::tuple{6});
+        CHECK(L.template TCall<int>(3) == 6);
         CHECK(L.GetMetatable(1) == false);
         L.SetTop(0);
 
         L.PushLambda([](std::optional<int> x) { return x; });
         L.PushValue(1);
-        CHECK(L.template TCall<int>(1) == std::tuple{1});
+        CHECK(L.template TCall<int>(1) == 1);
         L.PushValue(1);
-        CHECK(L.template TCall<std::optional<int>>() == std::tuple{std::nullopt});
+        CHECK(L.template TCall<std::optional<int>>() == std::nullopt);
 
         bool closed = false;
         {

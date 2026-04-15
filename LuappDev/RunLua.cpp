@@ -12,7 +12,7 @@ namespace LuappDev
         {
             L.PushValue(1);
             L.Push(42);
-            L.Arithmetic(lua::ArihmeticOperator::Add);
+            L.Arithmetic(lua::ArithmeticOperator::Add);
             return 1;
         }
         static double run_api(double a, double b)

@@ -22,29 +22,29 @@ namespace LuappDev
         CHECK(L.Compare(1, 2, lua::ComparisonOperator::Equals));
         CHECK(L.Compare(1, 2, lua::ComparisonOperator::LessThanOrEquals));
 
-        L.Arithmetic(lua::ArihmeticOperator::Add);
+        L.Arithmetic(lua::ArithmeticOperator::Add);
         CHECK_EQ(lua::Integer{15}, L.CheckInteger(2));
 
-        L.Arithmetic(lua::ArihmeticOperator::Subtract);
+        L.Arithmetic(lua::ArithmeticOperator::Subtract);
         CHECK_EQ(lua::Integer{-10}, L.CheckInteger(1));
 
         L.Push(2);
-        L.Arithmetic(lua::ArihmeticOperator::Multiply);
+        L.Arithmetic(lua::ArithmeticOperator::Multiply);
         CHECK_EQ(lua::Integer{-20}, L.CheckInteger(1));
 
         L.Push(2);
-        L.Arithmetic(lua::ArihmeticOperator::Divide);
+        L.Arithmetic(lua::ArithmeticOperator::Divide);
         CHECK_EQ(lua::Integer{-10}, L.CheckInteger(1));
 
-        L.Arithmetic(lua::ArihmeticOperator::UnaryNegation);
+        L.Arithmetic(lua::ArithmeticOperator::UnaryNegation);
         CHECK_EQ(lua::Integer{10}, L.CheckInteger(1));
 
         L.Push(4);
-        L.Arithmetic(lua::ArihmeticOperator::Modulo);
+        L.Arithmetic(lua::ArithmeticOperator::Modulo);
         CHECK_EQ(lua::Integer{2}, L.CheckInteger(1));
 
         L.Push(4);
-        L.Arithmetic(lua::ArihmeticOperator::Pow);
+        L.Arithmetic(lua::ArithmeticOperator::Pow);
         CHECK_EQ(lua::Integer{16}, L.CheckInteger(1));
         L.Pop(1);
 
@@ -52,26 +52,26 @@ namespace LuappDev
         {
             L.Push(4);
             L.Push(6);
-            L.Arithmetic(S::ArihmeticOperator::BitwiseAnd);
+            L.Arithmetic(S::ArithmeticOperator::BitwiseAnd);
             CHECK_EQ(lua::Integer{4}, L.CheckInteger(1));
 
             L.Push(2);
-            L.Arithmetic(S::ArihmeticOperator::BitwiseOr);
+            L.Arithmetic(S::ArithmeticOperator::BitwiseOr);
             CHECK_EQ(lua::Integer{6}, L.CheckInteger(1));
 
             L.Push(2);
-            L.Arithmetic(S::ArihmeticOperator::BitwiseXOr);
+            L.Arithmetic(S::ArithmeticOperator::BitwiseXOr);
             CHECK_EQ(lua::Integer{4}, L.CheckInteger(1));
 
             L.Push(2);
-            L.Arithmetic(S::ArihmeticOperator::ShiftLeft);
+            L.Arithmetic(S::ArithmeticOperator::ShiftLeft);
             CHECK_EQ(lua::Integer{4 << 2}, L.CheckInteger(1));
 
             L.Push(2);
-            L.Arithmetic(S::ArihmeticOperator::ShiftRight);
+            L.Arithmetic(S::ArithmeticOperator::ShiftRight);
             CHECK_EQ(lua::Integer{4}, L.CheckInteger(1));
 
-            L.Arithmetic(S::ArihmeticOperator::BitwiseNot);
+            L.Arithmetic(S::ArithmeticOperator::BitwiseNot);
             CHECK_EQ(~lua::Integer{4}, L.CheckInteger(1));
             L.Pop(1);
         }
