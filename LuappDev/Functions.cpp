@@ -306,6 +306,9 @@ namespace LuappDev
         L.SetTop(0);
 
         L.PushLambda([i=0](int x) mutable { return i += x; });
+        CHECK(L.Debug_GetUpvalue(1, 1) != nullptr);
+        CHECK(L.IsUserdata(2));
+        L.Pop(1);
         L.PushValue(1);
         CHECK(L.template TCall<int>(1) == 1);
         L.PushValue(1);
@@ -315,7 +318,32 @@ namespace LuappDev
         CHECK(L.GetMetatable(1) == false);
         L.SetTop(0);
 
+        L.PushLambda([i=0](S L) mutable { L.Push(L.CheckInt(1) + i++); return 1; });
+        CHECK(L.Debug_GetUpvalue(1, 1) != nullptr);
+        CHECK(L.IsUserdata(2));
+        L.Pop(1);
+        L.PushValue(1);
+        CHECK(L.template TCall<int>(1) == 1);
+        L.PushValue(1);
+        CHECK(L.template TCall<int>(2) == 3);
+        L.PushValue(1);
+        CHECK(L.template TCall<int>(3) == 5);
+        CHECK(L.GetMetatable(1) == false);
+        L.SetTop(0);
+
+        L.PushLambda([](S L) { L.Push(L.CheckInt(1) + 5); return 1; });
+        CHECK(L.Debug_GetUpvalue(1, 1) == nullptr);
+        L.PushValue(1);
+        CHECK(L.template TCall<int>(1) == 6);
+        L.PushValue(1);
+        CHECK(L.template TCall<int>(2) == 7);
+        L.PushValue(1);
+        CHECK(L.template TCall<int>(3) == 8);
+        CHECK(L.GetMetatable(1) == false);
+        L.SetTop(0);
+
         L.PushLambda([](std::optional<int> x) { return x; });
+        CHECK(L.Debug_GetUpvalue(1, 1) == nullptr);
         L.PushValue(1);
         CHECK(L.template TCall<int>(1) == 1);
         L.PushValue(1);
