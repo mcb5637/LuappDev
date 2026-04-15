@@ -73,6 +73,21 @@ namespace LuappDev
         }
     }
 
+    template<class S>
+    struct Close
+    {
+        bool* closed;
+
+        void C()
+        {
+            *closed = true;
+        }
+
+        static constexpr std::array LuaMetaMethods {
+            S::FuncReference::template GetUCRef<&Close::C>(S::MetaEvent::Close),
+        };
+    };
+
     TEST_CASE_TEMPLATE("Functions", US, lua::UniqueState, ExtUniqueState)
     {
         using S = US::Base;
@@ -305,31 +320,80 @@ namespace LuappDev
         CHECK(L.template TCall<int>(1) == 1);
         L.PushValue(1);
         CHECK(L.template TCall<std::optional<int>>() == std::nullopt);
-
-        bool closed = false;
         {
-            struct Dtor
+            bool closed = false;
             {
-                bool& closed;
-                bool done = false;
-
-                explicit Dtor(bool& b) : closed(b) {}
-                Dtor(Dtor&& o)  noexcept : closed(o.closed)
+                struct Dtor
                 {
-                    o.done = true;
-                }
+                    bool& closed;
+                    bool done = false;
 
-                ~Dtor()
-                {
-                    if (!done)
-                        closed = true;
-                }
-            };
+                    explicit Dtor(bool& b) : closed(b) {}
+                    Dtor(Dtor&& o)  noexcept : closed(o.closed)
+                    {
+                        o.done = true;
+                    }
 
-            US L2{};
-            Dtor dtor{closed};
-            L2.PushLambda([x = std::move(dtor)](S) mutable { return 0; });
+                    ~Dtor()
+                    {
+                        if (!done)
+                            closed = true;
+                    }
+                };
+
+                US L2{};
+                Dtor dtor{closed};
+                L2.PushLambda([x = std::move(dtor)](S) mutable { return 0; });
+            }
+            CHECK(closed);
         }
-        CHECK(closed);
+        if constexpr (S::Capabilities::CloseSlots)
+        {
+            L.SetTop(0);
+            bool closed = false;
+            L.DoStringT(R"(return function(get)
+    local toc <close> = get()
+    print(tostring(toc))
+end)");
+            L.PushLambda([c = &closed](S L)
+            {
+                L.template NewUserClass<Close<S>>(c);
+                return 1;
+            });
+            L.TCall(1, 0);
+            CHECK(closed == true);
+
+            closed = false;
+            L.PushLambda([](S L)
+            {
+                L.MarkAsToClose(1);
+                return 0;
+            });
+            L.template NewUserClass<Close<S>>(&closed);
+            L.TCall(1, 0);
+            CHECK(closed == true);
+
+            closed = false;
+            L.PushLambda([](S L)
+            {
+                L.MarkAsToClose(1);
+                L.Pop(1);
+                return 0;
+            });
+            L.template NewUserClass<Close<S>>(&closed);
+            L.TCall(1, 0);
+            CHECK(closed == true);
+
+            closed = false;
+            L.PushLambda([](S L)
+            {
+                L.MarkAsToClose(1);
+                L.CloseSlot(1);
+                return 0;
+            });
+            L.template NewUserClass<Close<S>>(&closed);
+            L.TCall(1, 0);
+            CHECK(closed == true);
+        }
     }
 }
