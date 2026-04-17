@@ -21,6 +21,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v6
+        with:
+          submodules: true
 
       - name: Setup Cpp
         uses: aminya/setup-cpp@v1
@@ -39,6 +41,18 @@ jobs:
 
           gcovr: false
           opencppcoverage: false
+
+      - uses: actions/cache@v5
+        with:
+          key: ${{ runner.os }}-lua
+          path: |
+            LuappDev/lua50
+            LuappDev/lua51
+            LuappDev/lua52
+            LuappDev/lua53
+            LuappDev/lua54
+            LuappDev/lua55
+            LuappDev/luajit
 
       - name: setup lua
         run:
