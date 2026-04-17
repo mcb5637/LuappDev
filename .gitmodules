@@ -1,3 +1,6 @@
 [submodule "LuappDev/luapp"]
 	path = LuappDev/luapp
 	url = https://github.com/mcb5637/Luapp.git
+[submodule "luajit_src"]
+	path = luajit_src
+	url = https://luajit.org/git/luajit.git
