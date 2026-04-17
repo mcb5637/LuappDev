@@ -28,7 +28,7 @@ namespace LuappDev
             }
 
         public:
-            explicit IntHolderOp(lua::Integer i) : i(i) {}
+            explicit IntHolderOp(lua::Integer j) : i(j) {}
 
             static constexpr bool UserClassOperatorTranslate = true;
 
@@ -76,7 +76,7 @@ namespace LuappDev
             }
 
         public:
-            explicit IntHolderLua(lua::Integer i) : i(i) {}
+            explicit IntHolderLua(lua::Integer j) : i(j) {}
 
             static constexpr std::array LuaMethods{
                 S::FuncReference::template GetRef<get>("Get"),
@@ -265,7 +265,7 @@ namespace LuappDev
             }
 
         public:
-            explicit IntHolderAPI(lua::Integer i) : i(i) {}
+            explicit IntHolderAPI(lua::Integer j) : i(j) {}
 
             static constexpr std::array LuaMethods{
                 S::FuncReference::template GetUCRef<&IntHolderAPI::get>("Get"),
@@ -391,7 +391,7 @@ namespace LuappDev
             }
 
         public:
-            explicit InheritanceTestB(lua::Integer i) : i(i) {}
+            explicit InheritanceTestB(lua::Integer j) : i(j) {}
             virtual ~InheritanceTestB() = default;
 
             static constexpr std::array LuaMethods{
@@ -422,7 +422,7 @@ namespace LuappDev
         public:
             using InheritsFrom = std::tuple<InheritanceTestB<S>>;
 
-            InheritanceTestD(lua::Integer i, lua::Number j) : InheritanceTestB<S>(i), j(j) {}
+            InheritanceTestD(lua::Integer i, lua::Number n) : InheritanceTestB<S>(i), j(n) {}
 
             static constexpr std::array LuaMethods{
                 S::FuncReference::template GetRef<getj>("GetJ"),
@@ -441,7 +441,7 @@ namespace LuappDev
 
             static constexpr std::array<typename S::FuncReference, 0> LuaMethods{};
 
-            explicit InheritanceTestF(std::function<void()> f) : InheritanceTestB<S>(42), f(std::move(f)) {}
+            explicit InheritanceTestF(std::function<void()> v) : InheritanceTestB<S>(42), f(std::move(v)) {}
 
             ~InheritanceTestF() override { f(); }
         };
@@ -525,7 +525,7 @@ namespace LuappDev
             static_assert(lua::func::detail::IsUserClass<MultiInheritance*, MultiInheritance> && std::is_pointer_v<MultiInheritance*>);
 
         public:
-            explicit MultiInheritance(std::function<void()> f) : f(std::move(f)) {}
+            explicit MultiInheritance(std::function<void()> v) : f(std::move(v)) {}
             ~MultiInheritance()
             {
                 f();
@@ -541,7 +541,7 @@ namespace LuappDev
 
             using InheritsFrom = std::tuple<Accumulate<S>, Append<S>>;
 
-            static auto SClone(lua::UserClassChecked<MultiInheritance> th)
+            static lua::PushNewUserClass<MultiInheritance, std::function<void()>> SClone(lua::UserClassChecked<MultiInheritance> th)
             {
                 return lua::PushNewUserClass{std::in_place_type<MultiInheritance>, th->f};
             }
@@ -790,8 +790,8 @@ namespace LuappDev
         L.SetGlobal("i");
         L.template NewUserClass<IntHolderOp>(7);
         CHECK(L.template OptionalUserClass<IntHolderLua>(-1) == nullptr);
-        AssertRegex("LuappDev::cls::IntHolderOp<lua::decorator::State<[:, [:alnum:]]+>>: 0x[0-9a-f]+", L.ConvertToString(1));
-        AssertRegex("<Userdata (class )?LuappDev::cls::IntHolderOp<lua::decorator::State<[:, [:alnum:]]+>> 0x[0-9a-f]+>", L.ToDebugString(1));
+        AssertRegex("LuappDev::cls::IntHolderOp<lua::decorator::State<[:, [:alnum:]]+> ?>: 0x[0-9a-f]+", L.ConvertToString(1));
+        AssertRegex("<Userdata (class )?LuappDev::cls::IntHolderOp<lua::decorator::State<[:, [:alnum:]]+> ?> 0x[0-9a-f]+>", L.ToDebugString(1));
         CHECK(L.GetMetaField(1, "Get"));
         CHECK(L.IsCFunction(-1));
         L.SetTop(1);

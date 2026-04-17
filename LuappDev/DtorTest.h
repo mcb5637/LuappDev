@@ -8,7 +8,7 @@ namespace LuappDev::cls
         std::function<void()> f;
 
     public:
-        explicit DtorTest(std::function<void()> f) : f(std::move(f)) {}
+        explicit DtorTest(std::function<void()> v) : f(std::move(v)) {}
 
         ~DtorTest() { f(); }
     };

@@ -318,7 +318,7 @@ namespace LuappDev
         CHECK(L.GetMetatable(1) == false);
         L.SetTop(0);
 
-        L.PushLambda([i=0](S L) mutable { L.Push(L.CheckInt(1) + i++); return 1; });
+        L.PushLambda([i=0](S l) mutable { l.Push(l.CheckInt(1) + i++); return 1; });
         CHECK(L.Debug_GetUpvalue(1, 1) != nullptr);
         CHECK(L.IsUserdata(2));
         L.Pop(1);
@@ -331,7 +331,7 @@ namespace LuappDev
         CHECK(L.GetMetatable(1) == false);
         L.SetTop(0);
 
-        L.PushLambda([](S L) { L.Push(L.CheckInt(1) + 5); return 1; });
+        L.PushLambda([](S l) { l.Push(l.CheckInt(1) + 5); return 1; });
         CHECK(L.Debug_GetUpvalue(1, 1) == nullptr);
         L.PushValue(1);
         CHECK(L.template TCall<int>(1) == 6);
@@ -383,18 +383,18 @@ namespace LuappDev
     local toc <close> = get()
     print(tostring(toc))
 end)");
-            L.PushLambda([c = &closed](S L)
+            L.PushLambda([c = &closed](S l)
             {
-                L.template NewUserClass<Close<S>>(c);
+                l.template NewUserClass<Close<S>>(c);
                 return 1;
             });
             L.TCall(1, 0);
             CHECK(closed == true);
 
             closed = false;
-            L.PushLambda([](S L)
+            L.PushLambda([](S l)
             {
-                L.MarkAsToClose(1);
+                l.MarkAsToClose(1);
                 return 0;
             });
             L.template NewUserClass<Close<S>>(&closed);
@@ -402,10 +402,10 @@ end)");
             CHECK(closed == true);
 
             closed = false;
-            L.PushLambda([](S L)
+            L.PushLambda([](S l)
             {
-                L.MarkAsToClose(1);
-                L.Pop(1);
+                l.MarkAsToClose(1);
+                l.Pop(1);
                 return 0;
             });
             L.template NewUserClass<Close<S>>(&closed);
@@ -413,10 +413,10 @@ end)");
             CHECK(closed == true);
 
             closed = false;
-            L.PushLambda([](S L)
+            L.PushLambda([](S l)
             {
-                L.MarkAsToClose(1);
-                L.CloseSlot(1);
+                l.MarkAsToClose(1);
+                l.CloseSlot(1);
                 return 0;
             });
             L.template NewUserClass<Close<S>>(&closed);
