@@ -5,7 +5,7 @@ on:
 
 jobs:
   Test:
-    name: ${{matrix.os}} ${{matrix.compiler}} ${{matrix.build_type}} ${{matrix.packaging_maintainer_mode == 'ON' && '(maintainer mode)' || ''}}
+    name: ${{matrix.os}} ${{matrix.compiler}}
     runs-on: ${{ matrix.os }}
 
     strategy:
@@ -35,6 +35,7 @@ jobs:
           vcpkg: false
           ccache: false
           clangtidy: false
+          conan: true
 
 
           cppcheck: false
@@ -44,7 +45,7 @@ jobs:
 
       - uses: actions/cache@v5
         with:
-          key: ${{ runner.os }}-lua
+          key: ${{ matrix.os }}-${{matrix.compiler}}-lua
           path: |
             LuappDev/lua50
             LuappDev/lua51
@@ -53,14 +54,18 @@ jobs:
             LuappDev/lua54
             LuappDev/lua55
             LuappDev/luajit
+            ~/.conan2/p
 
       - name: setup lua
         run:
           ./setup_lua.sh
 
+      - name: Get dependency provider
+        uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/add_conan_provider@main
+
       - name: Configure CMake
         run: |
-          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Debug
+          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake
 
       - name: Build
         run: |
