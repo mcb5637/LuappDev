@@ -1,14 +1,13 @@
-@echo off
+
 
 :download_lua
 setlocal
 set link=%1
 set out="./LuappDev/%2"
-set tmp="./lua.tar.gz"
+set tmp="./lua.zip"
 if exist "%out%/" (
     echo "%2 already exists"
-)
-else (
+) else (
     curl -o "%tmp%" -L "%link%"
     mkdir "%out%"
     tar -xf "%tmp%" -C "%out%"
@@ -28,8 +27,7 @@ call :download_lua "https://sourceforge.net/projects/luabinaries/files/5.0.3/Win
 
 if exist "./LuappDev/luajit" (
     echo "luajit already exists"
-)
-else (
+) else (
     cd "./luajit_src/src"
     msvcbuild
     cd "../.."

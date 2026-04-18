@@ -74,7 +74,7 @@ jobs:
 
       - name: Configure CMake
         run: |
-          cmake -S . -B ./build -DCMAKE_BUILD_TYPE=Debug -DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake
+          cmake -S . -B ./build "-DCMAKE_BUILD_TYPE=Debug" "-DCMAKE_PROJECT_TOP_LEVEL_INCLUDES=conan_provider.cmake"
 
       - name: Build
         run: |
