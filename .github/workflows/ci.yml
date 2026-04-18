@@ -19,6 +19,9 @@ jobs:
           - os: ubuntu-latest
             compiler: gcc-14
 
+          - os: windows-latest
+            compiler: msvc
+
     steps:
       - uses: actions/checkout@v6
         with:
@@ -57,8 +60,14 @@ jobs:
             ~/.conan2/p
 
       - name: setup lua
+        if: runner.os != 'Windows'
         run:
           ./setup_lua.sh
+
+      - name: setup lua win
+        if: runner.os == 'Windows'
+        run:
+          ./setup_lua.bat
 
       - name: Get dependency provider
         uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/add_conan_provider@main
