@@ -78,7 +78,7 @@ jobs:
 
       - name: Build
         run: |
-          cmake --build ./build --parallel $(nproc 2>/dev/null || sysctl -n hw.logicalcpu)
+          cmake --build ./build --parallel 4
 
       - name: Test
         working-directory: ./build
