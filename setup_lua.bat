@@ -12,20 +12,20 @@ if exist "./LuappDev/luajit" (
     cd "./luajit_src/src"
     msvcbuild
     cd "../.."
-    mkdir "./LuappDev/luajit"
-    copy "./luajit_src/src/luajit.lib" "./LuappDev/luajit"
-    copy "./luajit_src/src/lua.h" "./LuappDev/luajit"
-    copy "./luajit_src/src/lauxlib.h" "./LuappDev/luajit"
-    copy "./luajit_src/src/lualib.h" "./LuappDev/luajit"
-    copy "./luajit_src/src/luajit.h" "./LuappDev/luajit"
-    copy "./luajit_src/src/luaconf.h" "./LuappDev/luajit"
+    mkdir ./LuappDev/luajit
+    copy ./luajit_src/src/luajit.lib ./LuappDev/luajit
+    copy ./luajit_src/src/lua.h ./LuappDev/luajit
+    copy ./luajit_src/src/lauxlib.h ./LuappDev/luajit
+    copy ./luajit_src/src/lualib.h ./LuappDev/luajit
+    copy ./luajit_src/src/luajit.h ./LuappDev/luajit
+    copy ./luajit_src/src/luaconf.h ./LuappDev/luajit
 )
 
 EXIT /B %ERRORLEVEL%
 
 :download_lua
 setlocal
-set link=%~1
+set link="%~1"
 set out="./LuappDev/%~2"
 set tmp="./lua.zip"
 if exist "%out%/" (
