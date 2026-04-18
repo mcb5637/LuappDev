@@ -6,19 +6,19 @@ call :download_lua "https://sourceforge.net/projects/luabinaries/files/5.2.4/Win
 call :download_lua "https://sourceforge.net/projects/luabinaries/files/5.1.5/Windows%%20Libraries/Static/lua-5.1.5_Win64_vc17_lib.zip/download" "lua51"
 call :download_lua "https://sourceforge.net/projects/luabinaries/files/5.0.3/Windows%%20Libraries/lua5_0_3_Win64_vc8_lib.zip/download" "lua50"
 
-if exist "./LuappDev/luajit" (
+if exist LuappDev\luajit (
     echo "luajit already exists"
 ) else (
-    cd "./luajit_src/src"
+    cd .\luajit_src\src
     msvcbuild
-    cd "../.."
-    mkdir ./LuappDev/luajit
-    copy ./luajit_src/src/luajit.lib ./LuappDev/luajit
-    copy ./luajit_src/src/lua.h ./LuappDev/luajit
-    copy ./luajit_src/src/lauxlib.h ./LuappDev/luajit
-    copy ./luajit_src/src/lualib.h ./LuappDev/luajit
-    copy ./luajit_src/src/luajit.h ./LuappDev/luajit
-    copy ./luajit_src/src/luaconf.h ./LuappDev/luajit
+    cd ..\..
+    mkdir LuappDev\luajit
+    copy luajit_src\src\luajit.lib LuappDev\luajit
+    copy luajit_src\src\lua.h LuappDev\luajit
+    copy luajit_src\src\lauxlib.h LuappDev\luajit
+    copy luajit_src\src\lualib.h LuappDev\luajit
+    copy luajit_src\src\luajit.h LuappDev\luajit
+    copy luajit_src\src\luaconf.h LuappDev\luajit
 )
 
 EXIT /B %ERRORLEVEL%
@@ -26,17 +26,17 @@ EXIT /B %ERRORLEVEL%
 :download_lua
 setlocal
 set link="%~1"
-set out="./LuappDev/%~2"
-set tmp="./lua.zip"
-if exist "%out%/" (
+set out="LuappDev\%~2"
+set tmp="lua.zip"
+if exist "%out%\" (
     echo %~2 already exists
 ) else (
     curl -o %tmp% -L %link%
     mkdir %out%
     7z x %tmp% -o%out%
     del %tmp%
-    move /Y %out%/include/* %out%
-    del %out%/include/
+    move /Y %out%\include\* %out%
+    del %out%\include\
 )
 endlocal
 EXIT /B 0
