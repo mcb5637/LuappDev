@@ -29,14 +29,14 @@ set link=%~1
 set out="./LuappDev/%~2"
 set tmp="./lua.zip"
 if exist "%out%/" (
-    echo "%~2 already exists"
+    echo %~2 already exists
 ) else (
-    curl -o "%tmp%" -L "%link%"
-    mkdir "%out%"
-    tar -xf "%tmp%" -C "%out%"
-    del "%tmp%"
-    move /Y "%out%/include/*" "%out%"
-    del "%out%/include/"
+    curl -o %tmp% -L %link%
+    mkdir %out%
+    7z x %tmp% -o%out%
+    del %tmp%
+    move /Y %out%/include/* %out%
+    del %out%/include/
 )
 endlocal
 EXIT /B 0
