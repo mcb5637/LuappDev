@@ -40,7 +40,17 @@ namespace LuappDev
         CHECK(demangle(typeid(Cls).name()) == typename_details::type_name<Cls>());
         CHECK(demangle(typeid(Usi).name()) == typename_details::type_name<Usi>());
         CHECK(demangle(typeid(Td).name()) == typename_details::type_name<Td>());
+#ifdef _MSC_VER
+        {
+            std::string dem{demangle(typeid(Fun).name())};
+            std::erase(dem, ' ');
+            std::string ty{typename_details::type_name<Fun>()};
+            std::erase(ty, ' ');
+            CHECK(dem == ty);
+        }
+#else
         CHECK(demangle(typeid(Fun).name()) == typename_details::type_name<Fun>());
+#endif
         CHECK(demangle(typeid(TCls<int>).name()) == typename_details::type_name<TCls<int>>());
         CHECK(demangle(typeid(ICls<5>).name()) == typename_details::type_name<ICls<5>>());
     }

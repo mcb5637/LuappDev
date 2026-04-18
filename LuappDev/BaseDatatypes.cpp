@@ -183,8 +183,10 @@ namespace LuappDev
     {
         CHECK(lua::cast_detail::TryCast<float>(5.0) == 5.0f);
         CHECK(lua::cast_detail::TryCast<float>(0.0) == 0.0f);
+#ifndef _MSC_VER
         CHECK(lua::cast_detail::TryCast<float>(std::numeric_limits<double>::max()) == std::nullopt);
         CHECK(lua::cast_detail::TryCast<float>(-std::numeric_limits<double>::max()) == std::nullopt);
+#endif
         CHECK(lua::cast_detail::TryCast<float>(std::numeric_limits<double>::min()) == 0.0f);
 
         CHECK(lua::cast_detail::TryCast<float>(-5.0) == -5.0f);

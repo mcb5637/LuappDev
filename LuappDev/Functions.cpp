@@ -153,7 +153,7 @@ namespace LuappDev
         L.TCall(1, 0);
         L.SetTop(0);
 
-        L.template Push<funcs::api4>();
+        L.template Push<&funcs::api4>();
         L.Push(5);
         L.TCall(1, 2);
         CHECK(L.template Check<double>(1) == 5.5);

@@ -517,7 +517,7 @@ namespace LuappDev
             {
                 return std::format("a={}, c={}, n={}, s={}", a, c, this->n, r.s);
             }
-            [[nodiscard]] auto Clone() const
+            [[nodiscard]] lua::PushNewUserClass<MultiInheritance, std::function<void()>> Clone() const
             {
                 return lua::userdata::PushNewUserClass{std::in_place_type<MultiInheritance>, this->f};
             }
@@ -790,8 +790,8 @@ namespace LuappDev
         L.SetGlobal("i");
         L.template NewUserClass<IntHolderOp>(7);
         CHECK(L.template OptionalUserClass<IntHolderLua>(-1) == nullptr);
-        AssertRegex("LuappDev::cls::IntHolderOp<lua::decorator::State<[:, [:alnum:]]+> ?>: 0x[0-9a-f]+", L.ConvertToString(1));
-        AssertRegex("<Userdata (class )?LuappDev::cls::IntHolderOp<lua::decorator::State<[:, [:alnum:]]+> ?> 0x[0-9a-f]+>", L.ToDebugString(1));
+        AssertRegex("(class )?LuappDev::cls::IntHolderOp<(class )?lua::decorator::State<[:, [:alnum:]]+> ?>: 0x[0-9a-f]+", L.ConvertToString(1));
+        AssertRegex("<Userdata (class )?LuappDev::cls::IntHolderOp<(class )?lua::decorator::State<[:, [:alnum:]]+> ?> 0x[0-9a-f]+>", L.ToDebugString(1));
         CHECK(L.GetMetaField(1, "Get"));
         CHECK(L.IsCFunction(-1));
         L.SetTop(1);

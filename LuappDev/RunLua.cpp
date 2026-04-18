@@ -52,8 +52,8 @@ namespace LuappDev
 
 
         std::array toRegister{
-            S::FuncReference::template GetRef<funcs::run_foo<S>>("foo"),
-            S::FuncReference::template GetRef<funcs::run_api>("api1"),
+            S::FuncReference::template GetRef<&funcs::run_foo<S>>("foo"),
+            S::FuncReference::template GetRef<&funcs::run_api>("api1"),
         };
 
         L.RegisterFuncs(toRegister);

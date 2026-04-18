@@ -56,7 +56,7 @@ namespace LuappDev
         CHECK(L.CheckNumber(1) == 4.2 + 42.0);
         L.SetTop(0);
 
-        L.Push<ExtFuncAPI>();
+        L.Push<&ExtFuncAPI>();
         auto r = L.TCall<Vec>(Vec{1.0, 5.0});
         CHECK(r == Vec{5.0, 1.0});
         CHECK(L.GetTop() == 1);
