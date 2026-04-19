@@ -9,12 +9,12 @@ if exist LuappDev\lua50 (
      echo "lua50 already exists"
 ) else (
     setlocal
-    set link="https://www.lua.org/ftp/lua-5.0.3.tar.gz"
     set out="LuappDev\lua50"
     set tmp="lua.zip"
     set builder="lua50_builder\"
-    curl -o %tmp% -L %link%
+    curl -o %tmp% -L "https://www.lua.org/ftp/lua-5.0.3.tar.gz"
     tar -xf %tmp% -C %builder%
+    ren lua50_builder\lua-5.0.3 lua50_builder\lua
 
     cd %builder%
     cmake -S . -B ./build "-DCMAKE_BUILD_TYPE=Debug"
@@ -24,7 +24,9 @@ if exist LuappDev\lua50 (
     mkdir %out%
     del %tmp%
 
-    copy /Y %builder%/lua-5.0.3/include/*.h %out%
+    copy /Y %builder%/lua/include/lauxlib.h %out%
+    copy /Y %builder%/lua/include/lua.h %out%
+    copy /Y %builder%/lua/include/lualib.h %out%
     copy /Y %builder%/build/lua50.lib %out%
     endlocal
 )
@@ -36,7 +38,7 @@ if exist LuappDev\luajit (
     msvcbuild mixed
     cd ..\..
     mkdir LuappDev\luajit
-    copy luajit_src\src\luajit.lib LuappDev\luajit
+    copy luajit_src\src\lua51.lib LuappDev\luajit\luajit.lib
     copy luajit_src\src\lua.h LuappDev\luajit
     copy luajit_src\src\lauxlib.h LuappDev\luajit
     copy luajit_src\src\lualib.h LuappDev\luajit

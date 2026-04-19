@@ -69,13 +69,6 @@ jobs:
         run:
           ./setup_lua.bat
 
-      - uses: actions/upload-artifact@v4
-        if: runner.os == 'Windows'
-        with:
-          path: ./luajit_src/src/
-          name: "test"
-          overwrite: true
-
       - name: Get dependency provider
         uses: dice-group/cpp-conan-release-reusable-workflow/.github/actions/add_conan_provider@main
 
