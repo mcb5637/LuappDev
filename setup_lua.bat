@@ -10,10 +10,10 @@ if exist LuappDev\lua50 (
 ) else (
     setlocal
     curl -o "lua.zip" -L "https://www.lua.org/ftp/lua-5.0.3.tar.gz"
-    tar -xf "lua.zip" -C "lua50_builder\"
+    tar -xf "lua.zip" -C "lua50_builder"
     ren "lua50_builder\lua-5.0.3" "lua50_builder\lua"
 
-    cd "lua50_builder\"
+    cd "lua50_builder"
     cmake -S . -B ./build "-DCMAKE_BUILD_TYPE=Debug"
     cmake --build ./build --parallel 4
     cd ..\
