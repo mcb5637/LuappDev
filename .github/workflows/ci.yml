@@ -80,7 +80,14 @@ jobs:
         run: |
           cmake --build ./build --parallel 4
 
-      - name: Test
+      - name: Test Linux
+        if: runner.os != 'Windows'
         working-directory: ./build
         run: |
           ctest --verbose
+
+      - name: Test Windows
+        if: runner.os == 'Windows'
+        working-directory: ./build
+        run: |
+          ctest --verbose -C Debug
