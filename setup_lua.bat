@@ -4,13 +4,36 @@ call :download_lua "https://sourceforge.net/projects/luabinaries/files/5.4.8/Win
 call :download_lua "https://sourceforge.net/projects/luabinaries/files/5.3.6/Windows%%%%20Libraries/Static/lua-5.3.6_Win64_vc17_lib.zip/download" "lua53"
 call :download_lua "https://sourceforge.net/projects/luabinaries/files/5.2.4/Windows%%%%20Libraries/Static/lua-5.2.4_Win64_vc17_lib.zip/download" "lua52"
 call :download_lua "https://sourceforge.net/projects/luabinaries/files/5.1.5/Windows%%%%20Libraries/Static/lua-5.1.5_Win64_vc17_lib.zip/download" "lua51"
-call :download_lua "https://sourceforge.net/projects/luabinaries/files/5.0.3/Windows%%%%20Libraries/lua5_0_3_Win64_vc8_lib.zip/download" "lua50"
+
+if exist LuappDev\lua50 (
+     echo "lua50 already exists"
+) else (
+    setlocal
+    set link="https://www.lua.org/ftp/lua-5.0.3.tar.gz"
+    set out="LuappDev\lua50"
+    set tmp="lua.zip"
+    set builder="lua50_builder\"
+    curl -o %tmp% -L %link%
+    tar -xf %tmp% -C %builder%
+
+    cd %builder%
+    cmake -S . -B ./build "-DCMAKE_BUILD_TYPE=Debug"
+    cmake --build ./build --parallel 4
+    cd ../
+
+    mkdir %out%
+    del %tmp%
+
+    copy /Y %builder%/lua-5.0.3/include/*.h %out%
+    copy /Y %builder%/build/lua50.lib %out%
+    endlocal
+)
 
 if exist LuappDev\luajit (
     echo "luajit already exists"
 ) else (
     cd .\luajit_src\src
-    msvcbuild
+    msvcbuild mixed
     cd ..\..
     mkdir LuappDev\luajit
     copy luajit_src\src\luajit.lib LuappDev\luajit

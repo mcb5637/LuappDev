@@ -383,3 +383,5 @@ FodyWeavers.xsd
 /CMakeUserPresets.json
 /conan_provider.cmake
 /.idea/
+/lua50_builder/lua-5.0.3/
+/lua50_builder/build/
