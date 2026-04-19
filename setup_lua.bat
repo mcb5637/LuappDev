@@ -9,25 +9,22 @@ if exist LuappDev\lua50 (
      echo "lua50 already exists"
 ) else (
     setlocal
-    set out="LuappDev\lua50"
-    set tmp="lua.zip"
-    set builder="lua50_builder\"
-    curl -o %tmp% -L "https://www.lua.org/ftp/lua-5.0.3.tar.gz"
-    tar -xf %tmp% -C %builder%
-    ren lua50_builder\lua-5.0.3 lua50_builder\lua
+    curl -o "lua.zip" -L "https://www.lua.org/ftp/lua-5.0.3.tar.gz"
+    tar -xf "lua.zip" -C "lua50_builder\"
+    ren "lua50_builder\lua-5.0.3" "lua50_builder\lua"
 
-    cd %builder%
+    cd "lua50_builder\"
     cmake -S . -B ./build "-DCMAKE_BUILD_TYPE=Debug"
     cmake --build ./build --parallel 4
-    cd ../
+    cd ..\
 
-    mkdir %out%
-    del %tmp%
+    mkdir "LuappDev\lua50"
+    del "lua.zip"
 
-    copy /Y %builder%/lua/include/lauxlib.h %out%
-    copy /Y %builder%/lua/include/lua.h %out%
-    copy /Y %builder%/lua/include/lualib.h %out%
-    copy /Y %builder%/build/lua50.lib %out%
+    copy /Y "lua50_builder\lua\include\lauxlib.h" "LuappDev\lua50"
+    copy /Y "lua50_builder\lua\include\lua.h" "LuappDev\lua50"
+    copy /Y "lua50_builder\lua\include\lualib.h" "LuappDev\lua50"
+    copy /Y "lua50_builder\build\lua50.lib" "LuappDev\lua50"
     endlocal
 )
 
@@ -52,14 +49,14 @@ EXIT /B %ERRORLEVEL%
 setlocal
 set link="%~1"
 set out="LuappDev\%~2"
-set tmp="lua.zip"
+set temparch="lua.zip"
 if exist "%out%\" (
     echo %~2 already exists
 ) else (
-    curl -o %tmp% -L %link%
+    curl -o %temparch% -L %link%
     mkdir %out%
-    7z x %tmp% -o%out%
-    del %tmp%
+    7z x %temparch% -o%out%
+    del %temparch%
     move /Y %out%\include\* %out%
     del %out%\include\
 )
