@@ -24,7 +24,7 @@ if exist LuappDev\lua50 (
     copy /Y "lua50_builder\lua\include\lauxlib.h" "LuappDev\lua50"
     copy /Y "lua50_builder\lua\include\lua.h" "LuappDev\lua50"
     copy /Y "lua50_builder\lua\include\lualib.h" "LuappDev\lua50"
-    copy /Y "lua50_builder\build\lua50.lib" "LuappDev\lua50"
+    copy /Y "lua50_builder\build\Debug\lua50.lib" "LuappDev\lua50"
     endlocal
 )
 
