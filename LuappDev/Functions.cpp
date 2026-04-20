@@ -59,6 +59,11 @@ namespace LuappDev
         {
             return {static_cast<double>(i) + 0.5, "foo"};
         }
+        template<class S>
+        static double api5(S L, int i)
+        {
+            return L.CheckNumber(S::Upvalueindex(1)) + i;
+        }
     } // namespace funcs
 
     std::string ExceptionConverter(std::string_view funcsig)
@@ -160,6 +165,13 @@ namespace LuappDev
         CHECK(L.template Check<std::string_view>(2) == "foo");
         L.SetTop(0);
 
+        L.Push(5.5);
+        L.template Push<&funcs::api5<S>>(1);
+        L.Push(500);
+        L.TCall(1, 1);
+        CHECK(L.template Check<double>(1) == 505.5);
+        L.SetTop(0);
+
         L.template Push<funcs::ex<S>>();
         L.Push(5);
         CHECK(L.PCall(1, 0) == lua::ErrorCode::Runtime);
@@ -214,6 +226,11 @@ namespace LuappDev
             {
                 return {static_cast<double>(i) + a, x + i, s};
             }
+
+            double api6(double b, S L, int j)
+            {
+                return L.CheckNumber(S::Upvalueindex(2)) + j + i + b;
+            }
         };
         A a{5};
         L.Push(3);
@@ -240,6 +257,14 @@ namespace LuappDev
         L.Push(5);
         L.TCall(1, 1);
         CHECK_EQ(11, L.CheckInt(1));
+        L.SetTop(0);
+
+        L.Push(5.5);
+        L.template Push<&A::api6>(a, 1);
+        L.Push(6000);
+        L.Push(500);
+        L.TCall(2, 1);
+        CHECK(L.template Check<double>(1) == 6510.5);
         L.SetTop(0);
 
         std::array toregobj{
