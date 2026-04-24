@@ -85,7 +85,7 @@ endif()
 add_compile_options(${PROJECT_WARNINGS_CXX})
 enable_testing()
 
-function(make_lua_version name compileopt pp_compile link)
+function(make_lua_version name compileopt pp_compile link include)
     add_executable(${name}
             LuappDev/CreateDelete.cpp
             LuappDev/StackAccess.cpp
@@ -109,15 +109,20 @@ function(make_lua_version name compileopt pp_compile link)
 
     add_test(NAME ${name} COMMAND ${name})
 
-    target_include_directories(${name} PRIVATE LuappDev)
+    target_include_directories(${name}
+            PRIVATE
+            LuappDev
+            LuappDev/luapp/include
+            ${include}
+    )
 
     target_link_libraries(${name} PRIVATE doctest::doctest ${link})
 endfunction()
 
-make_lua_version("LuappDev55" "-DLUA55" "LuappDev/luapp/luapp55.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua55/${LIB_PREFIX}lua55${LIB_EXTENSION}")
-make_lua_version("LuappDev54" "-DLUA54" "LuappDev/luapp/luapp54.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua54/${LIB_PREFIX}lua54${LIB_EXTENSION}")
-make_lua_version("LuappDev53" "-DLUA53" "LuappDev/luapp/luapp53.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua53/${LIB_PREFIX}lua53${LIB_EXTENSION}")
-make_lua_version("LuappDev52" "-DLUA52" "LuappDev/luapp/luapp52.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua52/${LIB_PREFIX}lua52${LIB_EXTENSION}")
-make_lua_version("LuappDev51" "-DLUA51" "LuappDev/luapp/luapp51.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua51/${LIB_PREFIX}lua5.1${LIB_EXTENSION}")
-make_lua_version("LuappDev50" "-DLUA50" "LuappDev/luapp/luapp50.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua50/${LIB_PREFIX}lua50${LIB_EXTENSION}")
-make_lua_version("LuappDevJIT" "-DLUAJIT" "LuappDev/luapp/luappjit.cpp;LuappDev/luapp/luapp51.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/luajit/${LIB_PREFIX}luajit${LIB_EXTENSION}")
+make_lua_version("LuappDev55" "-DLUA55" "LuappDev/luapp/src55/luapp55.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua55/${LIB_PREFIX}lua55${LIB_EXTENSION}" "LuappDev/lua55")
+make_lua_version("LuappDev54" "-DLUA54" "LuappDev/luapp/src54/luapp54.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua54/${LIB_PREFIX}lua54${LIB_EXTENSION}" "LuappDev/lua54")
+make_lua_version("LuappDev53" "-DLUA53" "LuappDev/luapp/src53/luapp53.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua53/${LIB_PREFIX}lua53${LIB_EXTENSION}" "LuappDev/lua53")
+make_lua_version("LuappDev52" "-DLUA52" "LuappDev/luapp/src52/luapp52.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua52/${LIB_PREFIX}lua52${LIB_EXTENSION}" "LuappDev/lua52")
+make_lua_version("LuappDev51" "-DLUA51" "LuappDev/luapp/src51/luapp51.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua51/${LIB_PREFIX}lua5.1${LIB_EXTENSION}" "LuappDev/lua51")
+make_lua_version("LuappDev50" "-DLUA50" "LuappDev/luapp/src50/luapp50.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/lua50/${LIB_PREFIX}lua50${LIB_EXTENSION}" "LuappDev/lua50")
+make_lua_version("LuappDevJIT" "-DLUAJIT" "LuappDev/luapp/srcjit/luappjit.cpp;LuappDev/luapp/src51/luapp51.cpp" "${CMAKE_CURRENT_SOURCE_DIR}/LuappDev/luajit/${LIB_PREFIX}luajit${LIB_EXTENSION}" "LuappDev/luajit")

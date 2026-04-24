@@ -5,25 +5,25 @@
 #include <doctest/doctest.h>
 
 #ifdef LUA50
-#include "luapp/luapp50.h"
+#include <luapp/luapp50.h>
 #endif
 #ifdef LUA51
-#include "luapp/luapp51.h"
+#include <luapp/luapp51.h>
 #endif
 #ifdef LUAJIT
-#include "luapp/luappjit.h"
+#include <luapp/luappjit.h>
 #endif
 #ifdef LUA52
-#include "luapp/luapp52.h"
+#include <luapp/luapp52.h>
 #endif
 #ifdef LUA53
-#include "luapp/luapp53.h"
+#include <luapp/luapp53.h>
 #endif
 #ifdef LUA54
-#include "luapp/luapp54.h"
+#include <luapp/luapp54.h>
 #endif
 #ifdef LUA55
-#include "luapp/luapp55.h"
+#include <luapp/luapp55.h>
 #endif
 
 namespace LuappDev
